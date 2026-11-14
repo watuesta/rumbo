@@ -1,0 +1,40 @@
+# Stack de Rumbo para Portainer (Stacks > Add stack > Repository).
+# Las variables ${...} se cargan en la sección "Environment variables" del stack.
+services:
+  web:
+    build: .
+    image: rumbo-web:latest
+    restart: unless-stopped
+    ports:
+      - "8130:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Define SECRET_KEY}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Define ALLOWED_HOSTS}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:?Define CSRF_TRUSTED_ORIGINS}
+      POSTGRES_DB: ${POSTGRES_DB:-rumbo}
+      POSTGRES_USER: ${POSTGRES_USER:-rumbo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rumbo}
+      POSTGRES_USER: ${POSTGRES_USER:-rumbo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+    volumes:
+      - rumbo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rumbo_pgdata:
