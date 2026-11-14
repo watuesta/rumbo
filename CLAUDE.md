@@ -7,10 +7,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 App para hacer seguimiento al proceso de pérdida de peso: registro de peso,
 alimentación y pasos, con gráficas. Se comparte con otra persona (mi hermana).
 
-## Estado actual
-- El repositorio solo contiene el README; todavía no hay código, comandos de
-  build ni tests. Actualiza este archivo con comandos y arquitectura cuando
-  existan.
+## Comandos
+- Entorno local: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
+- Servidor: `DEBUG=True .venv/bin/python manage.py runserver`
+- Tests: `DEBUG=True .venv/bin/python manage.py test`
+- Un test: `DEBUG=True .venv/bin/python manage.py test seguimiento.tests.test_vistas.DiaTests.test_suma_calorias_del_dia`
+- Migraciones: `DEBUG=True .venv/bin/python manage.py makemigrations seguimiento`
+- `DEBUG=True` hace falta en local: sin él, la configuración exige `SECRET_KEY`
+  y usa el almacenamiento de WhiteNoise con manifiesto, que necesita
+  `collectstatic`.
+
+## Arquitectura
+- `config/settings.py` lee todo de variables de entorno. Sin `POSTGRES_DB` usa
+  SQLite (desarrollo y tests); con ella, Postgres.
+- Una sola app, `seguimiento`: modelos `Perfil` (uno por usuario),
+  `RegistroDiario` (uno por usuario y fecha) y `Comida` (varias por día, ligadas
+  a usuario y fecha, no al registro).
+- `seguimiento/calculos.py` tiene los cálculos puros (promedio móvil de 7 días,
+  pasos de la semana, progreso hacia la meta). Las vistas consultan la base y
+  les pasan dicts.
+- Las vistas usan `perfil_requerido`, que exige login y un perfil creado.
+  Toda consulta filtra por `usuario=request.user`.
+- Plantillas de Django sin frameworks: `templates/` (base, login) y
+  `seguimiento/templates/`. CSS propio en `static/css/rumbo.css` con tokens de
+  color para modo claro y oscuro; `static/js/tema.js` guarda la elección.
+- Las gráficas reciben los datos con `json_script` y las dibuja
+  `static/js/graficas.js` con Chart.js guardado en `static/vendor/`.
+- Docker: `entrypoint.sh` corre `migrate` y `collectstatic` antes de Gunicorn.
+  `docker-compose.yml` usa `${VAR}` para que Portainer cargue las variables.
 
 ## Stack
 - Backend: Django + Python

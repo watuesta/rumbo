@@ -1,0 +1,590 @@
+/* Rumbo — estilos. Mobile-first: una columna pensada para el iPhone. */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../fonts/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+/* Modo oscuro: es el de la marca y el valor por defecto. */
+:root {
+  color-scheme: dark;
+  --fondo: #000000;
+  --superficie: #0e1511;
+  --linea: #24302a;
+  --texto: #f2f5f3;
+  --tenue: #8d9a93;
+  --acento: #25d366;
+  --acento-texto: #25d366;
+  --sobre-acento: #000000;
+  --peligro: #ff7a6b;
+  --exito-fondo: #0f2a1a;
+}
+
+/* Modo claro: el verde de marca no alcanza contraste como texto sobre blanco,
+   así que se oscurece para textos y se mantiene para rellenos. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --fondo: #f5f7f6;
+    --superficie: #ffffff;
+    --linea: #d9e1dc;
+    --texto: #08110c;
+    --tenue: #56635c;
+    --acento-texto: #0b7a3b;
+    --peligro: #b8322a;
+    --exito-fondo: #dcf5e5;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --fondo: #f5f7f6;
+  --superficie: #ffffff;
+  --linea: #d9e1dc;
+  --texto: #08110c;
+  --tenue: #56635c;
+  --acento-texto: #0b7a3b;
+  --peligro: #b8322a;
+  --exito-fondo: #dcf5e5;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  min-height: 100dvh;
+}
+
+a {
+  color: var(--acento-texto);
+}
+
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+h1,
+h2 {
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+h1 {
+  font-size: 1.75rem;
+  font-stretch: 85%;
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 1.1875rem;
+}
+
+/* ---------- Estructura ---------- */
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top) + 0.75rem) 1rem 0.75rem;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.marca {
+  color: var(--texto);
+  text-decoration: none;
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.marca svg {
+  color: var(--acento);
+}
+
+.boton-tema {
+  appearance: none;
+  border: 1px solid var(--linea);
+  background: transparent;
+  color: var(--texto);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.contenido {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.contenido > * + * {
+  margin-top: 1.5rem;
+}
+
+.pestanas {
+  position: fixed;
+  inset: auto 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--fondo);
+  border-top: 1px solid var(--linea);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+}
+.pestanas a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--tenue);
+  text-decoration: none;
+}
+.pestanas a[aria-current="page"] {
+  color: var(--acento-texto);
+}
+
+/* ---------- Mensajes ---------- */
+
+.mensajes {
+  list-style: none;
+  padding: 0;
+}
+.mensajes li {
+  background: var(--exito-fondo);
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+}
+.mensajes li.error {
+  background: transparent;
+  border: 1px solid var(--peligro);
+  color: var(--peligro);
+}
+
+/* ---------- Inicio: el trayecto ---------- */
+
+.ruta {
+  padding-top: 0.5rem;
+}
+
+.ruta-cifra {
+  margin: 0;
+  font-size: clamp(4.5rem, 24vw, 7rem);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+.ruta-cifra small {
+  font-size: 0.28em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--tenue);
+  margin-left: 0.15em;
+}
+
+.ruta-nota {
+  margin: 0.4rem 0 0;
+  color: var(--tenue);
+}
+
+/* La línea va del peso inicial a la meta; el tramo recorrido es sólido y el
+   que falta es punteado. --progreso va de 0 a 1. */
+.trayecto {
+  --progreso: 0;
+  position: relative;
+  height: 1.5rem;
+  margin: 2rem 0 0.5rem;
+}
+.trayecto::before,
+.trayecto::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+.trayecto::before {
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(90deg, var(--linea) 0 6px, transparent 6px 12px);
+}
+.trayecto::after {
+  left: 0;
+  width: calc(var(--progreso) * 100%);
+  background: var(--acento);
+  animation: avanzar 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.trayecto-meta,
+.trayecto-marcador {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+.trayecto-meta {
+  left: 100%;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 3px solid var(--texto);
+  background: var(--fondo);
+}
+.trayecto-marcador {
+  left: calc(var(--progreso) * 100%);
+  width: 1.4rem;
+  height: 1.4rem;
+  background: var(--acento);
+  box-shadow: 0 0 0 5px var(--fondo);
+  z-index: 1;
+  animation: avanzar-marcador 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes avanzar {
+  from {
+    width: 0;
+  }
+}
+@keyframes avanzar-marcador {
+  from {
+    left: 0;
+  }
+}
+
+.trayecto-extremos {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: var(--tenue);
+}
+
+.ruta-balance {
+  margin: 1.25rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid var(--linea);
+}
+.cifras div {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--linea);
+}
+.cifras div:nth-child(odd) {
+  padding-right: 1rem;
+  border-right: 1px solid var(--linea);
+}
+.cifras div:nth-child(even) {
+  padding-left: 1rem;
+}
+.cifras dt {
+  font-size: 0.875rem;
+  color: var(--tenue);
+}
+.cifras dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-stretch: 85%;
+}
+.cifras dd small {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--tenue);
+}
+
+/* ---------- Botones ---------- */
+
+.boton {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.125rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton:active {
+  transform: scale(0.98);
+}
+.boton-grande {
+  min-height: 4rem;
+  font-size: 1.3125rem;
+}
+.boton-secundario {
+  background: transparent;
+  color: var(--texto);
+  border: 1px solid var(--linea);
+}
+.boton-texto {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0.5rem 0;
+  font: inherit;
+  color: var(--tenue);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.boton-texto.peligro {
+  color: var(--peligro);
+}
+
+/* ---------- Formularios ---------- */
+
+.campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.campo-ancho {
+  grid-column: 1 / -1;
+}
+.campo label {
+  font-size: 0.875rem;
+  color: var(--tenue);
+}
+.campo input {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--linea);
+  border-radius: 0.75rem;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+.campo input::placeholder {
+  color: var(--tenue);
+  font-weight: 400;
+  opacity: 0.6;
+}
+.campo input:focus {
+  border-color: var(--acento);
+  outline: none;
+}
+.campo input[aria-invalid="true"] {
+  border-color: var(--peligro);
+}
+.campo-error,
+.form-error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--peligro);
+}
+.form > * + * {
+  margin-top: 1rem;
+}
+
+/* ---------- Día ---------- */
+
+.dia-cabecera {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr 2.75rem;
+  align-items: center;
+  text-align: center;
+}
+.dia-cabecera p {
+  margin: 0.2rem 0 0;
+  color: var(--tenue);
+  font-size: 0.9375rem;
+}
+.flecha {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  color: var(--texto);
+  text-decoration: none;
+  border: 1px solid var(--linea);
+}
+.flecha[aria-disabled="true"] {
+  visibility: hidden;
+}
+
+.seccion > * + * {
+  margin-top: 0.75rem;
+}
+.seccion-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.seccion-titulo span {
+  color: var(--tenue);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--linea);
+}
+.lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--linea);
+}
+.lista .crece {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+.lista form {
+  margin: 0;
+}
+.quitar {
+  appearance: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--linea);
+  background: transparent;
+  color: var(--tenue);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.comida-form {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.75rem;
+  align-items: end;
+}
+.comida-form .boton {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Historial ---------- */
+
+.historial a {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 1rem;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.historial .fecha {
+  font-weight: 600;
+}
+.historial .datos {
+  grid-column: 1;
+  color: var(--tenue);
+  font-size: 0.9375rem;
+}
+.historial .peso {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.paginas {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ---------- Gráficas ---------- */
+
+.segmentos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0.25rem;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+}
+.segmentos a {
+  padding: 0.55rem 0;
+  border-radius: 999px;
+  text-align: center;
+  color: var(--texto);
+  text-decoration: none;
+}
+.segmentos a[aria-current="page"] {
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font-weight: 700;
+}
+
+.grafica {
+  position: relative;
+  height: 15rem;
+}
+.vacio {
+  margin: 0;
+  color: var(--tenue);
+}
+
+/* ---------- Acceso ---------- */
+
+.acceso {
+  padding-top: 12vh;
+}
+.acceso .ruta-cifra {
+  font-size: clamp(3.5rem, 18vw, 5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

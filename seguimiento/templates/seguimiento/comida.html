@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Editar comida · Rumbo{% endblock %}
+{% block contenido %}
+<div>
+  <h1>Editar comida</h1>
+  <p class="ruta-nota">{{ comida.fecha|date:"l j \d\e F"|lower|capfirst }}</p>
+</div>
+
+<form method="post" class="form" novalidate>
+  {% csrf_token %}
+  <div class="campos">
+    {% include "campo.html" with campo=form.calorias %}
+    {% include "campo.html" with campo=form.descripcion %}
+  </div>
+  <button type="submit" class="boton">Guardar comida</button>
+  <a class="boton boton-secundario" href="{% url 'dia' comida.fecha.isoformat %}">Cancelar</a>
+</form>
+{% endblock %}

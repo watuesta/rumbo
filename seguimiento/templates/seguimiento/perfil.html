@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Perfil · Rumbo{% endblock %}
+{% block contenido %}
+<div>
+  <h1>{% if nuevo %}Tu punto de partida{% else %}Perfil{% endif %}</h1>
+  {% if nuevo %}<p class="ruta-nota">Con estos datos Rumbo calcula cuánto has avanzado y cuánto falta.</p>{% endif %}
+</div>
+
+<form method="post" class="form" novalidate>
+  {% csrf_token %}
+  <div class="campos">
+    {% include "campo.html" with campo=form.peso_inicial %}
+    {% include "campo.html" with campo=form.peso_meta %}
+    {% include "campo.html" with campo=form.fecha_inicio %}
+    {% include "campo.html" with campo=form.meta_pasos %}
+  </div>
+  <button type="submit" class="boton">{% if nuevo %}Empezar{% else %}Guardar perfil{% endif %}</button>
+</form>
+
+<form method="post" action="{% url 'salir' %}">
+  {% csrf_token %}
+  <button type="submit" class="boton boton-secundario">Salir de {{ user.get_username }}</button>
+</form>
+
+{% if user.is_staff %}
+  <p><a href="{% url 'admin:index' %}">Administrar cuentas</a></p>
+{% endif %}
+{% endblock %}
