@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block contenido %}
+<section class="ruta" aria-label="Tu avance">
+  <p class="ruta-cifra">{{ peso_actual|kg }}<small>kg</small></p>
+  <p class="ruta-nota">
+    {% if ultimo %}Último pesaje: {{ ultimo.fecha|date:"j \d\e F"|lower }}{% else %}Peso inicial. Registra tu primer pesaje.{% endif %}
+  </p>
+
+  <div class="trayecto" style="--progreso: {{ progreso.fraccion|stringformat:'.3f' }}" role="img"
+       aria-label="Llevas {{ progreso.perdidos|kg }} kg de {{ perfil.peso_inicial|kg }} a {{ perfil.peso_meta|kg }} kg">
+    <span class="trayecto-marcador"></span>
+    <span class="trayecto-meta"></span>
+  </div>
+  <div class="trayecto-extremos">
+    <span>Inicio {{ perfil.peso_inicial|kg }}</span>
+    <span>Meta {{ perfil.peso_meta|kg }}</span>
+  </div>
+
+  <p class="ruta-balance">
+    {% if progreso.perdidos > 0 %}Has bajado {{ progreso.perdidos|kg }} kg.{% elif progreso.perdidos < 0 %}Estás {{ progreso.perdidos|kg_abs }} kg por encima del inicio.{% else %}Estás en tu punto de partida.{% endif %}
+    {% if progreso.faltan > 0 %}Faltan {{ progreso.faltan|kg }} kg.{% else %}Llegaste a la meta.{% endif %}
+  </p>
+</section>
+
+<dl class="cifras">
+  <div>
+    <dt>Pasos esta semana</dt>
+    <dd>
+      {% if promedio_pasos is not None %}{{ promedio_pasos }}{% else %}–{% endif %}
+      <small>promedio diario</small>
+    </dd>
+  </div>
+  <div>
+    <dt>Meta diaria</dt>
+    <dd>{{ perfil.meta_pasos }}<small>pasos</small></dd>
+  </div>
+</dl>
+
+<a class="boton boton-grande" href="{% url 'hoy' %}">Registrar hoy</a>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Gráficas · Rumbo{% endblock %}
+{% block contenido %}
+<h1>Gráficas</h1>
+
+<nav class="segmentos" aria-label="Rango de fechas">
+  {% for valor, nombre in rangos %}
+    <a href="?rango={{ valor }}" {% if valor == rango %}aria-current="page"{% endif %}>{{ nombre }}</a>
+  {% endfor %}
+</nav>
+
+<section class="seccion">
+  <h2>Peso</h2>
+  {% if hay_peso %}
+    <div class="grafica"><canvas id="grafica-peso" aria-label="Peso diario, promedio de 7 días y meta"></canvas></div>
+  {% else %}
+    <p class="vacio">Sin pesajes en este rango.</p>
+  {% endif %}
+</section>
+
+<section class="seccion">
+  <h2>Pasos</h2>
+  {% if hay_pasos %}
+    <div class="grafica"><canvas id="grafica-pasos" aria-label="Pasos diarios y meta diaria"></canvas></div>
+  {% else %}
+    <p class="vacio">Sin pasos en este rango.</p>
+  {% endif %}
+</section>
+
+<section class="seccion">
+  <h2>Calorías</h2>
+  {% if hay_calorias %}
+    <div class="grafica"><canvas id="grafica-calorias" aria-label="Calorías totales por día"></canvas></div>
+  {% else %}
+    <p class="vacio">Sin comidas en este rango.</p>
+  {% endif %}
+</section>
+
+{{ datos|json_script:"datos-graficas" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/graficas.js' %}"></script>
+{% endblock %}

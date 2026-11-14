@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar · Rumbo{% endblock %}
+{% block contenido %}
+<section class="acceso">
+  <p class="ruta-cifra">Rumbo</p>
+  <p class="ruta-nota">Sabe a dónde vas.</p>
+</section>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <p class="form-error">El usuario o la contraseña no coinciden. Revisa e intenta de nuevo.</p>
+  {% endif %}
+  <div class="campos">
+    {% include "campo.html" with campo=form.username ancho=True %}
+    {% include "campo.html" with campo=form.password ancho=True %}
+  </div>
+  <input type="hidden" name="next" value="{{ next }}">
+  <button type="submit" class="boton">Entrar</button>
+</form>
+{% endblock %}

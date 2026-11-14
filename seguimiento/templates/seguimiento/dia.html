@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block titulo %}{{ fecha|date:"j \d\e F"|lower }} · Rumbo{% endblock %}
+{% block contenido %}
+<header class="dia-cabecera">
+  {% if anterior %}
+    <a class="flecha" href="{% url 'dia' anterior.isoformat %}" aria-label="Día anterior">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  {% else %}
+    <span class="flecha" aria-disabled="true"></span>
+  {% endif %}
+  <div>
+    <h1>{% if es_hoy %}Hoy{% else %}{{ fecha|date:"l"|capfirst }}{% endif %}</h1>
+    <p>{{ fecha|date:"j \d\e F \d\e Y"|lower }}</p>
+  </div>
+  {% if siguiente %}
+    <a class="flecha" href="{% url 'dia' siguiente.isoformat %}" aria-label="Día siguiente">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  {% else %}
+    <span class="flecha" aria-disabled="true"></span>
+  {% endif %}
+</header>
+
+<form method="post" action="{% url 'dia' fecha.isoformat %}" class="form seccion" novalidate>
+  {% csrf_token %}
+  {% for e in form.non_field_errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+  <div class="campos">
+    {% include "campo.html" with campo=form.peso unidad="kg" %}
+    {% include "campo.html" with campo=form.pasos %}
+    {% include "campo.html" with campo=form.cintura unidad="cm" %}
+    {% include "campo.html" with campo=form.cadera unidad="cm" %}
+  </div>
+  <button type="submit" class="boton">Guardar día</button>
+</form>
+
+<section class="seccion" aria-labelledby="titulo-comidas">
+  <div class="seccion-titulo">
+    <h2 id="titulo-comidas">Comidas</h2>
+    <span>{{ total_calorias }} kcal en total</span>
+  </div>
+
+  {% if comidas %}
+    <ul class="lista">
+      {% for c in comidas %}
+        <li>
+          <a class="crece" href="{% url 'editar_comida' c.pk %}" aria-label="Editar {{ c.descripcion|default:'comida' }} de {{ c.calorias }} kcal">
+            <span>{{ c.descripcion|default:"Sin descripción" }}</span>
+            <span>{{ c.calorias }} kcal</span>
+          </a>
+          <form method="post" action="{% url 'borrar_comida' c.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="quitar" aria-label="Borrar {{ c.descripcion|default:'comida' }} de {{ c.calorias }} kcal">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="vacio">Aún no hay comidas este día. Agrega la primera con sus calorías.</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'agregar_comida' fecha.isoformat %}" class="comida-form" novalidate>
+    {% csrf_token %}
+    {% include "campo.html" with campo=comida_form.calorias %}
+    {% include "campo.html" with campo=comida_form.descripcion %}
+    <button type="submit" class="boton boton-secundario">Agregar comida</button>
+  </form>
+</section>
+
+{% if registro or comidas %}
+  <form method="post" action="{% url 'borrar_dia' fecha.isoformat %}"
+        onsubmit="return confirm('¿Borrar los datos y las comidas de este día?');">
+    {% csrf_token %}
+    <button type="submit" class="boton-texto peligro">Borrar este día</button>
+  </form>
+{% endif %}
+{% endblock %}
