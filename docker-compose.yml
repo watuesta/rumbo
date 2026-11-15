@@ -20,6 +20,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Gunicorn solo escucha cuando entrypoint.sh terminó las migraciones.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 8000), 2)"]
+      interval: 5s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
 
   db:
     image: postgres:17
@@ -38,6 +45,7 @@ services:
 
   # Respalda la base de datos con pg_dump al arrancar y luego cada 24 horas, en
   # BACKUP_DIR del NAS. Reiniciar este contenedor fuerza un respaldo inmediato.
+  # Espera a que web esté sana para no respaldar a mitad de las migraciones.
   # El script va aquí porque Portainer CE no monta archivos del repo.
   backup:
     image: postgres:17
@@ -53,6 +61,8 @@ services:
       - ${BACKUP_DIR:?Define BACKUP_DIR}:/respaldos
     depends_on:
       db:
+        condition: service_healthy
+      web:
         condition: service_healthy
     entrypoint: ["/bin/sh", "-c"]
     command:
