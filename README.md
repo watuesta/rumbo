@@ -8,6 +8,9 @@ NAS Synology, gestionado con Portainer, detrás de Nginx Proxy Manager.
 
 ## Despliegue en Portainer
 
+En esta guía, `rumbo.ejemplo.com` representa tu dominio y `192.168.1.10` la IP
+de tu NAS en la red local. Cámbialos por los tuyos.
+
 ### 1. Crear el stack desde el repositorio
 
 1. En Portainer, entra a **Stacks > Add stack**.
@@ -23,8 +26,8 @@ NAS Synology, gestionado con Portainer, detrás de Nginx Proxy Manager.
    |---|---|
    | `SECRET_KEY` | Una clave larga y aleatoria. Genérala con `python3 -c "import secrets; print(secrets.token_urlsafe(50))"` |
    | `DEBUG` | `False` |
-   | `ALLOWED_HOSTS` | `rumbo.watuesta.com` |
-   | `CSRF_TRUSTED_ORIGINS` | `https://rumbo.watuesta.com` |
+   | `ALLOWED_HOSTS` | `rumbo.ejemplo.com` |
+   | `CSRF_TRUSTED_ORIGINS` | `https://rumbo.ejemplo.com` |
    | `POSTGRES_DB` | `rumbo` |
    | `POSTGRES_USER` | `rumbo` |
    | `POSTGRES_PASSWORD` | Una contraseña larga y aleatoria |
@@ -44,14 +47,14 @@ su cuenta.
 
 ### 2. Publicar el dominio en Nginx Proxy Manager
 
-1. Crea un **Proxy Host** para `rumbo.watuesta.com`.
-2. Destino: esquema `http`, IP `192.168.1.251`, puerto `8130`.
+1. Crea un **Proxy Host** para `rumbo.ejemplo.com`.
+2. Destino: esquema `http`, IP `192.168.1.10`, puerto `8130`.
 3. En la pestaña **SSL**, pide un certificado de Let's Encrypt y activa
    **Force SSL**.
 
-Entra siempre por `https://rumbo.watuesta.com`. Con `DEBUG=False` las cookies
+Entra siempre por `https://rumbo.ejemplo.com`. Con `DEBUG=False` las cookies
 solo viajan por HTTPS, así que el login no funciona si entras directo a
-`http://192.168.1.251:8130`.
+`http://192.168.1.10:8130`.
 
 ### 3. Crear el superusuario
 
@@ -68,7 +71,7 @@ solo viajan por HTTPS, así que el login no funciona si entras directo a
 
 ### 4. Crear la cuenta del segundo usuario
 
-1. Entra a `https://rumbo.watuesta.com/admin/` con el superusuario.
+1. Entra a `https://rumbo.ejemplo.com/admin/` con el superusuario.
 2. En **Usuarios**, pulsa **Agregar usuario**.
 3. Escribe el nombre de usuario y la contraseña, y guarda.
 4. No marques "Es staff" ni "Es superusuario": la cuenta solo necesita usar la
