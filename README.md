@@ -6,6 +6,41 @@ de evolución. Cada persona tiene su cuenta y solo ve sus propios datos.
 Hecha con Django, PostgreSQL y Chart.js. Se despliega con Docker Compose en un
 NAS Synology, gestionado con Portainer, detrás de Nginx Proxy Manager.
 
+## Qué hace
+
+Rumbo está pensada para usarse desde el celular en pocos segundos al día: anotas
+el pesaje de la mañana, los pasos y lo que comiste, y la app te muestra cuánto
+has avanzado hacia tu meta.
+
+- **Inicio.** Tu último peso en grande y una línea que va de tu peso inicial a
+  tu meta, con un marcador en el punto donde estás. Debajo, los kilos que has
+  bajado, los que faltan y tu promedio de pasos de la semana (de lunes a hoy)
+  frente a tu meta diaria.
+- **Registrar hoy.** Una sola pantalla por día con peso, pasos, cintura y
+  cadera, todos opcionales: puedes anotar el peso en la mañana y los pasos en la
+  noche. En la misma pantalla agregas comidas con sus calorías y una
+  descripción corta, y ves el total del día. Las calorías las escribes tú; la
+  app no las calcula. Peso y medidas aceptan coma o punto decimal.
+- **Historial.** La lista de días registrados con peso, pasos y calorías. Desde
+  ahí abres cualquier día para corregirlo o borrarlo, y editas o borras comidas.
+- **Gráficas.** Peso diario con su promedio móvil de 7 días y la línea de la
+  meta; pasos por día frente a la meta diaria; y calorías totales por día. Puedes
+  ver los últimos 30 días, 90 días o todo el historial.
+- **Perfil.** Peso inicial, fecha de inicio, peso meta y meta diaria de pasos
+  (8.000 por defecto). Se pide la primera vez que entras y lo puedes cambiar
+  cuando quieras.
+
+Otros detalles:
+
+- **Privada por cuenta.** No hay registro público: las cuentas se crean desde el
+  panel de administración y cada persona ve y edita solo sus propios datos.
+- **Hecha para el iPhone.** Botones grandes, teclado numérico en los campos de
+  números y opción de agregarla a la pantalla de inicio con su propio ícono.
+- **Modo claro y oscuro.** Sigue la configuración del teléfono y tiene un botón
+  para cambiarlo; recuerda tu elección.
+- **En español**, con hora de Colombia (America/Bogota), kilos y centímetros.
+- **Sesión de 90 días**, para no tener que entrar seguido.
+
 ## Despliegue en Portainer
 
 En esta guía, `rumbo.ejemplo.com` representa tu dominio y `192.168.1.10` la IP
