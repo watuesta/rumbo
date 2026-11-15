@@ -145,8 +145,10 @@ volumen.
 ## Respaldos
 
 El contenedor `backup` ejecuta `pg_dump` al arrancar y luego cada 24 horas.
-Guarda archivos como `rumbo-2026-11-14_0300.dump` en `BACKUP_DIR` y borra los
-que tengan más de `BACKUP_RETENCION_DIAS` días (30 por defecto).
+Arranca después de que `web` aparece como *healthy*, es decir, con las
+migraciones ya aplicadas; si `web` no llega a ese estado, `backup` tampoco
+arranca. Guarda archivos como `rumbo-2026-11-14_0300.dump` en `BACKUP_DIR` y
+borra los que tengan más de `BACKUP_RETENCION_DIAS` días (30 por defecto).
 
 - **Revisar que funciona:** en Portainer, abre los logs de `rumbo-backup-1`.
   Cada respaldo deja una línea `Respaldo creado: ...` o
