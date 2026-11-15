@@ -193,3 +193,36 @@ class CorreccionesTests(TestCase):
     def test_sin_pesajes_dentro_del_rango_no_dibuja_peso(self):
         RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy - timedelta(days=31), peso=Decimal("88"))
         self.assertFalse(self.client.get(reverse("graficas") + "?rango=30").context["hay_peso"])
+
+
+class ContrasenaTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+        self.url = reverse("cambiar_contrasena")
+
+    def test_cambiar_contrasena_mantiene_la_sesion(self):
+        datos = {
+            "old_password": "clave-de-prueba-123",
+            "new_password1": "otra-clave-segura-456",
+            "new_password2": "otra-clave-segura-456",
+        }
+        self.assertRedirects(self.client.post(self.url, datos), reverse("perfil"))
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password("otra-clave-segura-456"))
+        self.assertEqual(self.client.get(reverse("inicio")).status_code, 200)
+
+    def test_contrasena_actual_equivocada_no_cambia(self):
+        datos = {
+            "old_password": "no-es-esta",
+            "new_password1": "otra-clave-segura-456",
+            "new_password2": "otra-clave-segura-456",
+        }
+        self.assertEqual(self.client.post(self.url, datos).status_code, 200)
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password("clave-de-prueba-123"))
+
+    def test_sin_sesion_redirige_al_login(self):
+        self.client.logout()
+        respuesta = self.client.get(self.url)
+        self.assertRedirects(respuesta, f"{reverse('entrar')}?next={self.url}")

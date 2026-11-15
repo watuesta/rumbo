@@ -17,6 +17,10 @@
   <button type="submit" class="boton">{% if nuevo %}Empezar{% else %}Guardar perfil{% endif %}</button>
 </form>
 
+{% if not nuevo %}
+  <a class="boton boton-secundario" href="{% url 'cambiar_contrasena' %}">Cambiar contraseña</a>
+{% endif %}
+
 <form method="post" action="{% url 'salir' %}">
   {% csrf_token %}
   <button type="submit" class="boton boton-secundario">Salir de {{ user.get_username }}</button>

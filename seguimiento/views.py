@@ -3,10 +3,13 @@ from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import PasswordChangeView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import Paginator
 from django.db.models import Min, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -245,3 +248,10 @@ def perfil(request):
         inicial = {"fecha_inicio": timezone.localdate()} if actual is None else None
         form = PerfilForm(instance=actual, initial=inicial)
     return render(request, "seguimiento/perfil.html", {"form": form, "nuevo": actual is None})
+
+
+class CambiarContrasena(SuccessMessageMixin, PasswordChangeView):
+    """Cambia la contraseña sin cerrar la sesión y vuelve al perfil."""
+
+    success_url = reverse_lazy("perfil")
+    success_message = "Contraseña cambiada."

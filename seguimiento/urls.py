@@ -13,4 +13,5 @@ urlpatterns = [
     path("historial/", views.historial, name="historial"),
     path("graficas/", views.graficas, name="graficas"),
     path("perfil/", views.perfil, name="perfil"),
+    path("perfil/contrasena/", views.CambiarContrasena.as_view(), name="cambiar_contrasena"),
 ]
