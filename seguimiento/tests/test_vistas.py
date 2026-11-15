@@ -164,6 +164,14 @@ class CorreccionesTests(TestCase):
         comida.refresh_from_db()
         self.assertEqual((comida.calorias, comida.descripcion), (650, "Almuerzo"))
 
+    def test_descripcion_larga_de_comida(self):
+        url = reverse("agregar_comida", args=[self.hoy.isoformat()])
+        self.client.post(url, {"calorias": "500", "descripcion": "a" * 250})
+        self.assertEqual(Comida.objects.get().descripcion, "a" * 250)
+        respuesta = self.client.post(url, {"calorias": "500", "descripcion": "a" * 251})
+        self.assertContains(respuesta, "250 caracteres")
+        self.assertEqual(Comida.objects.count(), 1)
+
     def test_no_puede_editar_comida_ajena(self):
         ajena = Comida.objects.create(usuario=crear_usuario("beto"), fecha=self.hoy, calorias=500)
         url = reverse("editar_comida", args=[ajena.pk])

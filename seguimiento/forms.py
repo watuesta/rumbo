@@ -69,5 +69,5 @@ class ComidaForm(forms.ModelForm):
         labels = {"calorias": "Calorías", "descripcion": "Qué comiste"}
         widgets = {
             "calorias": entero_widget(),
-            "descripcion": forms.TextInput(attrs={"placeholder": "Opcional", "autocomplete": "off"}),
+            "descripcion": forms.Textarea(attrs={"rows": 2, "placeholder": "Opcional", "autocomplete": "off"}),
         }

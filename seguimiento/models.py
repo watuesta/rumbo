@@ -64,7 +64,7 @@ class Comida(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comidas")
     fecha = models.DateField()
     calorias = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(10_000)])
-    descripcion = models.CharField("descripción", max_length=80, blank=True)
+    descripcion = models.CharField("descripción", max_length=250, blank=True)
     creada = models.DateTimeField(auto_now_add=True)
 
     class Meta:

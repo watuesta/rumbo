@@ -64,7 +64,7 @@
   <form method="post" action="{% url 'agregar_comida' fecha.isoformat %}" class="comida-form" novalidate>
     {% csrf_token %}
     {% include "campo.html" with campo=comida_form.calorias %}
-    {% include "campo.html" with campo=comida_form.descripcion %}
+    {% include "campo.html" with campo=comida_form.descripcion ancho=True %}
     <button type="submit" class="boton boton-secundario">Agregar comida</button>
   </form>
 </section>
