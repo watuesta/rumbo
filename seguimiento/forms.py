@@ -84,14 +84,18 @@ class PerfilForm(forms.ModelForm):
 class RegistroDiarioForm(forms.ModelForm):
     class Meta:
         model = RegistroDiario
-        fields = ["peso", "pasos", "cintura", "cadera"]
+        fields = ["peso", "pasos", "cintura", "cadera", "calorias_activas"]
         field_classes = {"peso": DecimalFlexible, "cintura": DecimalFlexible, "cadera": DecimalFlexible}
-        labels = {"peso": "Peso", "pasos": "Pasos", "cintura": "Cintura", "cadera": "Cadera"}
+        labels = {
+            "peso": "Peso", "pasos": "Pasos", "cintura": "Cintura", "cadera": "Cadera",
+            "calorias_activas": "Calorías activas",
+        }
         widgets = {
             "peso": decimal_widget(),
             "pasos": entero_widget(),
             "cintura": decimal_widget(),
             "cadera": decimal_widget(),
+            "calorias_activas": entero_widget(),
         }
 
     def clean(self):

@@ -75,6 +75,9 @@ def inicio(request):
     peso = ultimo.peso if ultimo else perfil.peso_inicial
     consumidas = Comida.objects.filter(usuario=request.user, fecha=hoy).aggregate(t=Sum("calorias"))["t"] or 0
     calorias = calorias_del_perfil(perfil, peso)
+    registro_hoy = RegistroDiario.objects.filter(usuario=request.user, fecha=hoy).first()
+    activas = registro_hoy.calorias_activas if registro_hoy else None
+    objetivo = calculos.objetivo_del_dia(calorias["objetivo"], activas) if calorias else None
     return render(
         request,
         "seguimiento/inicio.html",
@@ -86,7 +89,8 @@ def inicio(request):
             "promedio_pasos": calculos.promedio_pasos_semana(pasos_semana, hoy),
             "consumidas": consumidas,
             "calorias": calorias,
-            "restan": calorias["objetivo"] - consumidas if calorias else None,
+            "objetivo": objetivo,
+            "restan": objetivo - consumidas if objetivo is not None else None,
         },
     )
 
@@ -137,6 +141,8 @@ def render_dia(request, fecha, registro, form, comida_form):
     hoy = timezone.localdate()
     total_calorias = sum(c.calorias for c in comidas)
     calorias = calorias_del_perfil(request.perfil, peso_actual(request.user, request.perfil))
+    activas = registro.calorias_activas if registro else None
+    objetivo = calculos.objetivo_del_dia(calorias["objetivo"], activas) if calorias else None
     return render(
         request,
         "seguimiento/dia.html",
@@ -151,6 +157,8 @@ def render_dia(request, fecha, registro, form, comida_form):
             "comidas": comidas,
             "total_calorias": total_calorias,
             "calorias": calorias,
+            "activas": activas,
+            "objetivo": objetivo,
         },
     )
 
@@ -197,11 +205,15 @@ def historial(request):
     filas = []
     for f in sorted(registros.keys() | calorias.keys(), reverse=True):
         registro = registros.get(f)
+        datos = [
+            (registro.pasos if registro else None, "pasos"),
+            (calorias.get(f, {}).get("total"), "kcal"),
+            (registro.calorias_activas if registro else None, "activas"),
+        ]
         filas.append({
             "fecha": f,
             "peso": registro.peso if registro else None,
-            "pasos": registro.pasos if registro else None,
-            "calorias": calorias.get(f, {}).get("total"),
+            "datos": [(valor, unidad) for valor, unidad in datos if valor is not None],
         })
     pagina = Paginator(filas, 30).get_page(request.GET.get("pagina"))
     return render(request, "seguimiento/historial.html", {"pagina": pagina})

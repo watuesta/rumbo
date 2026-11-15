@@ -11,7 +11,7 @@
         <a href="{% url 'dia' fila.fecha.isoformat %}">
           <span class="fecha">{{ fila.fecha|date:"l j \d\e F"|lower|capfirst }}</span>
           <span class="datos">
-            {% if fila.pasos is not None %}{{ fila.pasos }} pasos{% endif %}{% if fila.pasos is not None and fila.calorias %}, {% endif %}{% if fila.calorias %}{{ fila.calorias }} kcal{% endif %}{% if fila.pasos is None and not fila.calorias and fila.peso is None %}Solo medidas{% endif %}
+            {% for valor, unidad in fila.datos %}{{ valor }} {{ unidad }}{% if not forloop.last %}, {% endif %}{% empty %}{% if fila.peso is None %}Solo medidas{% endif %}{% endfor %}
           </span>
           <span class="peso">{% if fila.peso is not None %}{{ fila.peso|kg }} kg{% endif %}</span>
         </a>

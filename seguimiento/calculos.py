@@ -77,6 +77,11 @@ def calorias_objetivo(sexo, peso, altura_cm, edad):
     }
 
 
+def objetivo_del_dia(objetivo, calorias_activas):
+    """Las calorías activas del día (ejercicio, movimiento) se suman al objetivo."""
+    return objetivo + (calorias_activas or 0)
+
+
 def progreso(peso_inicial, peso_meta, peso_actual):
     """Kilos perdidos, kilos que faltan y fracción del camino recorrido (0 a 1)."""
     perdidos = peso_inicial - peso_actual
