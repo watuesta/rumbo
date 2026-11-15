@@ -42,7 +42,7 @@
   <div>
     {% if calorias %}
       <dt>{% if restan >= 0 %}Te quedan{% else %}Te pasaste{% endif %}</dt>
-      <dd>{{ restan|absoluto }}<small>de {{ calorias.objetivo }} kcal</small></dd>
+      <dd>{{ restan|absoluto }}<small>de {{ objetivo }} kcal</small></dd>
     {% else %}
       <dt>Objetivo</dt>
       <dd>–<small><a href="{% url 'perfil' %}">Completa tu perfil</a></small></dd>

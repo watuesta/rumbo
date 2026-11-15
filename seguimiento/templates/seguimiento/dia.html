@@ -30,6 +30,7 @@
     {% include "campo.html" with campo=form.pasos %}
     {% include "campo.html" with campo=form.cintura unidad="cm" %}
     {% include "campo.html" with campo=form.cadera unidad="cm" %}
+    {% include "campo.html" with campo=form.calorias_activas unidad="kcal" ancho=True %}
   </div>
   <button type="submit" class="boton">Guardar día</button>
 </form>
@@ -37,8 +38,11 @@
 <section class="seccion" aria-labelledby="titulo-comidas">
   <div class="seccion-titulo">
     <h2 id="titulo-comidas">Comidas</h2>
-    <span>{% if calorias %}{{ total_calorias }} de {{ calorias.objetivo }} kcal{% else %}{{ total_calorias }} kcal en total{% endif %}</span>
+    <span>{% if objetivo is not None %}{{ total_calorias }} de {{ objetivo }} kcal{% else %}{{ total_calorias }} kcal en total{% endif %}</span>
   </div>
+  {% if objetivo is not None and activas %}
+    <p class="ruta-nota">Objetivo del día: {{ calorias.objetivo }} + {{ activas }} activas = {{ objetivo }} kcal.</p>
+  {% endif %}
 
   {% if comidas %}
     <ul class="lista">

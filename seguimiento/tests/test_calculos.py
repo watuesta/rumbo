@@ -90,3 +90,11 @@ class CaloriasObjetivoTests(SimpleTestCase):
         self.assertIsNone(calculos.calorias_objetivo("X", Decimal("70"), 165, 30))
         self.assertIsNone(calculos.calorias_objetivo("F", Decimal("70"), None, 30))
         self.assertIsNone(calculos.calorias_objetivo("F", Decimal("70"), 165, None))
+
+
+class ObjetivoDelDiaTests(SimpleTestCase):
+    def test_suma_las_calorias_activas(self):
+        self.assertEqual(calculos.objetivo_del_dia(1500, 350), 1850)
+
+    def test_sin_calorias_activas_queda_el_objetivo(self):
+        self.assertEqual(calculos.objetivo_del_dia(1500, None), 1500)
