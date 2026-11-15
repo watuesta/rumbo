@@ -272,3 +272,45 @@ class DatosPerfilTests(TestCase):
         contexto = self.client.get(reverse("perfil")).context
         self.assertTrue(contexto["faltan_datos"])
         self.assertNotIn("edad", contexto)
+
+
+class CaloriasObjetivoVistasTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        perfil = self.usuario.perfil
+        perfil.sexo, perfil.altura_cm = "F", 165
+        perfil.fecha_nacimiento = date(1990, 5, 20)
+        perfil.save()
+        self.client.force_login(self.usuario)
+        self.hoy = timezone.localdate()
+        edad = calculos.edad(perfil.fecha_nacimiento, self.hoy)
+        # Sin pesajes se usa el peso inicial (90 kg).
+        self.objetivo = calculos.calorias_objetivo("F", Decimal("90"), 165, edad)["objetivo"]
+
+    def test_inicio_muestra_lo_que_queda_del_objetivo(self):
+        Comida.objects.create(usuario=self.usuario, fecha=self.hoy, calorias=600)
+        contexto = self.client.get(reverse("inicio")).context
+        self.assertEqual(contexto["consumidas"], 600)
+        self.assertEqual(contexto["restan"], self.objetivo - 600)
+
+    def test_dia_compara_el_total_con_el_objetivo(self):
+        Comida.objects.create(usuario=self.usuario, fecha=self.hoy, calorias=3000)
+        respuesta = self.client.get(reverse("dia", args=[self.hoy.isoformat()]))
+        # La app separa los miles con punto.
+        objetivo = f"{self.objetivo:,}".replace(",", ".")
+        self.assertContains(respuesta, f"3.000 de {objetivo} kcal")
+        self.assertEqual(respuesta.context["restan"], self.objetivo - 3000)
+
+    def test_usa_el_ultimo_pesaje(self):
+        RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, peso=Decimal("80"))
+        edad = calculos.edad(date(1990, 5, 20), self.hoy)
+        esperado = calculos.calorias_objetivo("F", Decimal("80"), 165, edad)
+        self.assertEqual(self.client.get(reverse("perfil")).context["calorias"], esperado)
+
+    def test_sin_datos_del_perfil_invita_a_completarlo(self):
+        perfil = self.usuario.perfil
+        perfil.altura_cm = None
+        perfil.save()
+        respuesta = self.client.get(reverse("inicio"))
+        self.assertIsNone(respuesta.context["calorias"])
+        self.assertContains(respuesta, "Completa tu perfil")

@@ -7,7 +7,7 @@
   {% if nuevo %}
     <p class="ruta-nota">Con estos datos Rumbo calcula cuánto has avanzado y cuánto falta.</p>
   {% elif faltan_datos %}
-    <p class="ruta-nota">Completa sexo, fecha de nacimiento y altura para ver tu edad.</p>
+    <p class="ruta-nota">Completa sexo, fecha de nacimiento y altura para ver tu edad y tus calorías.</p>
   {% endif %}
 </div>
 
@@ -22,6 +22,26 @@
       <dd>{{ peso_actual|kg }}<small>kg</small></dd>
     </div>
   </dl>
+
+  {% if calorias %}
+    <section class="seccion" aria-labelledby="titulo-calorias">
+      <h2 id="titulo-calorias">Calorías al día</h2>
+      <dl class="cifras">
+        <div>
+          <dt>Mantenimiento</dt>
+          <dd>{{ calorias.mantenimiento }}<small>kcal</small></dd>
+        </div>
+        <div>
+          <dt>Objetivo</dt>
+          <dd>{{ calorias.objetivo }}<small>kcal</small></dd>
+        </div>
+      </dl>
+      <p class="ruta-nota">
+        Comer menos de {{ calorias.mantenimiento }} kcal al día ya es déficit. El objetivo resta 500 kcal,
+        unos 0,5 kg por semana, sin bajar de {{ calorias.minimo }} kcal. Se calcula con tu peso actual.
+      </p>
+    </section>
+  {% endif %}
 {% endif %}
 
 <form method="post" class="form" novalidate>

@@ -51,6 +51,17 @@ def ultimo_pesaje(usuario):
     return RegistroDiario.objects.filter(usuario=usuario, peso__isnull=False).order_by("-fecha").first()
 
 
+def peso_actual(usuario, perfil):
+    ultimo = ultimo_pesaje(usuario)
+    return ultimo.peso if ultimo else perfil.peso_inicial
+
+
+def calorias_del_perfil(perfil, peso):
+    """Objetivo de calorías con el peso dado y la edad de hoy; None si faltan datos."""
+    edad = calculos.edad(perfil.fecha_nacimiento, timezone.localdate()) if perfil.fecha_nacimiento else None
+    return calculos.calorias_objetivo(perfil.sexo, peso, perfil.altura_cm, edad)
+
+
 @perfil_requerido
 def inicio(request):
     perfil = request.perfil
@@ -61,16 +72,21 @@ def inicio(request):
             usuario=request.user, fecha__gte=hoy - timedelta(days=hoy.weekday())
         ).values_list("fecha", "pasos")
     )
-    peso_actual = ultimo.peso if ultimo else perfil.peso_inicial
+    peso = ultimo.peso if ultimo else perfil.peso_inicial
+    consumidas = Comida.objects.filter(usuario=request.user, fecha=hoy).aggregate(t=Sum("calorias"))["t"] or 0
+    calorias = calorias_del_perfil(perfil, peso)
     return render(
         request,
         "seguimiento/inicio.html",
         {
             "perfil": perfil,
             "ultimo": ultimo,
-            "peso_actual": peso_actual,
-            "progreso": calculos.progreso(perfil.peso_inicial, perfil.peso_meta, peso_actual),
+            "peso_actual": peso,
+            "progreso": calculos.progreso(perfil.peso_inicial, perfil.peso_meta, peso),
             "promedio_pasos": calculos.promedio_pasos_semana(pasos_semana, hoy),
+            "consumidas": consumidas,
+            "calorias": calorias,
+            "restan": calorias["objetivo"] - consumidas if calorias else None,
         },
     )
 
@@ -119,6 +135,8 @@ def agregar_comida(request, fecha):
 def render_dia(request, fecha, registro, form, comida_form):
     comidas = Comida.objects.filter(usuario=request.user, fecha=fecha)
     hoy = timezone.localdate()
+    total_calorias = sum(c.calorias for c in comidas)
+    calorias = calorias_del_perfil(request.perfil, peso_actual(request.user, request.perfil))
     return render(
         request,
         "seguimiento/dia.html",
@@ -131,7 +149,9 @@ def render_dia(request, fecha, registro, form, comida_form):
             "form": form,
             "comida_form": comida_form,
             "comidas": comidas,
-            "total_calorias": sum(c.calorias for c in comidas),
+            "total_calorias": total_calorias,
+            "calorias": calorias,
+            "restan": calorias["objetivo"] - total_calorias if calorias else None,
         },
     )
 
@@ -242,8 +262,8 @@ def perfil(request):
     # perfil y al usuario aunque no se guarde, y el resumen debe mostrar lo guardado.
     contexto = {"nuevo": actual is None, "nombre": request.user.first_name or request.user.get_username()}
     if actual is not None:
-        ultimo = ultimo_pesaje(request.user)
-        contexto["peso_actual"] = ultimo.peso if ultimo else actual.peso_inicial
+        contexto["peso_actual"] = peso_actual(request.user, actual)
+        contexto["calorias"] = calorias_del_perfil(actual, contexto["peso_actual"])
         if actual.fecha_nacimiento:
             contexto["edad"] = calculos.edad(actual.fecha_nacimiento, timezone.localdate())
         contexto["faltan_datos"] = not (actual.sexo and actual.fecha_nacimiento and actual.altura_cm)

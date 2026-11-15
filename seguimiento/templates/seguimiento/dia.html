@@ -37,7 +37,7 @@
 <section class="seccion" aria-labelledby="titulo-comidas">
   <div class="seccion-titulo">
     <h2 id="titulo-comidas">Comidas</h2>
-    <span>{{ total_calorias }} kcal en total</span>
+    <span>{% if calorias %}{{ total_calorias }} de {{ calorias.objetivo }} kcal{% else %}{{ total_calorias }} kcal en total{% endif %}</span>
   </div>
 
   {% if comidas %}
