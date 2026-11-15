@@ -53,6 +53,9 @@ class RegistroDiario(models.Model):
     fecha = models.DateField()
     peso = peso_field(verbose_name="peso (kg)", null=True, blank=True)
     pasos = models.PositiveIntegerField(null=True, blank=True, validators=[MaxValueValidator(200_000)])
+    calorias_activas = models.PositiveIntegerField(
+        "calorías activas", null=True, blank=True, validators=[MaxValueValidator(5_000)]
+    )
     cintura = medida_field("cintura (cm)")
     cadera = medida_field("cadera (cm)")
 

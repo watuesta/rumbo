@@ -68,3 +68,33 @@ class EdadTests(SimpleTestCase):
     def test_nacido_el_29_de_febrero_cumple_el_1_de_marzo(self):
         self.assertEqual(calculos.edad(date(2000, 2, 29), date(2026, 2, 28)), 25)
         self.assertEqual(calculos.edad(date(2000, 2, 29), date(2026, 3, 1)), 26)
+
+
+class CaloriasObjetivoTests(SimpleTestCase):
+    def test_mujer_con_deficit_de_500(self):
+        # Reposo: 10·70 + 6,25·165 − 5·30 − 161 = 1420,25; mantenimiento ×1,2 = 1704,3.
+        calorias = calculos.calorias_objetivo("F", Decimal("70"), 165, 30)
+        self.assertEqual((calorias["reposo"], calorias["mantenimiento"], calorias["objetivo"]), (1420, 1704, 1204))
+
+    def test_hombre_con_deficit_de_500(self):
+        # Reposo: 10·90 + 6,25·180 − 5·35 + 5 = 1855; mantenimiento ×1,2 = 2226.
+        calorias = calculos.calorias_objetivo("M", Decimal("90"), 180, 35)
+        self.assertEqual((calorias["mantenimiento"], calorias["objetivo"]), (2226, 1726))
+
+    def test_objetivo_no_baja_del_minimo_seguro(self):
+        self.assertEqual(calculos.calorias_objetivo("F", Decimal("50"), 150, 60)["objetivo"], 1200)
+        self.assertEqual(calculos.calorias_objetivo("M", Decimal("55"), 160, 70)["objetivo"], 1500)
+
+    def test_sin_datos_completos_no_hay_objetivo(self):
+        self.assertIsNone(calculos.calorias_objetivo("", Decimal("70"), 165, 30))
+        self.assertIsNone(calculos.calorias_objetivo("X", Decimal("70"), 165, 30))
+        self.assertIsNone(calculos.calorias_objetivo("F", Decimal("70"), None, 30))
+        self.assertIsNone(calculos.calorias_objetivo("F", Decimal("70"), 165, None))
+
+
+class ObjetivoDelDiaTests(SimpleTestCase):
+    def test_suma_las_calorias_activas(self):
+        self.assertEqual(calculos.objetivo_del_dia(1500, 350), 1850)
+
+    def test_sin_calorias_activas_queda_el_objetivo(self):
+        self.assertEqual(calculos.objetivo_del_dia(1500, None), 1500)

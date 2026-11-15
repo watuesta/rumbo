@@ -13,3 +13,8 @@ def kg(valor):
 @register.filter
 def kg_abs(valor):
     return "" if valor is None else floatformat(abs(valor), 1)
+
+
+@register.filter
+def absoluto(valor):
+    return "" if valor is None else abs(valor)

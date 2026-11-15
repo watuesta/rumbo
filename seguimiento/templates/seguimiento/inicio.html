@@ -35,6 +35,19 @@
     <dt>Meta diaria</dt>
     <dd>{{ perfil.meta_pasos }}<small>pasos</small></dd>
   </div>
+  <div>
+    <dt>Calorías hoy</dt>
+    <dd>{{ consumidas }}<small>kcal consumidas</small></dd>
+  </div>
+  <div>
+    {% if calorias %}
+      <dt>{% if restan >= 0 %}Te quedan{% else %}Te pasaste{% endif %}</dt>
+      <dd>{{ restan|absoluto }}<small>de {{ objetivo }} kcal</small></dd>
+    {% else %}
+      <dt>Objetivo</dt>
+      <dd>–<small><a href="{% url 'perfil' %}">Completa tu perfil</a></small></dd>
+    {% endif %}
+  </div>
 </dl>
 
 <a class="boton boton-grande" href="{% url 'hoy' %}">Registrar hoy</a>

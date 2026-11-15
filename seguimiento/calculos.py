@@ -11,6 +11,12 @@ from decimal import Decimal
 RANGOS = {"30": ("30 días", 30), "90": ("90 días", 90), "todo": ("Todo", None)}
 RANGO_POR_DEFECTO = "30"
 
+# Objetivo de calorías: mantenimiento sedentario menos un déficit fijo, sin
+# bajar de un mínimo seguro por sexo.
+FACTOR_SEDENTARIO = 1.2
+DEFICIT = 500
+MINIMO_CALORIAS = {"F": 1200, "M": 1500}
+
 
 def inicio_de_rango(rango, hoy, primera_fecha):
     """Primer día que muestra la gráfica para un rango válido de RANGOS."""
@@ -50,6 +56,30 @@ def edad(fecha_nacimiento, hoy):
     """Años cumplidos. Quien nació un 29 de febrero los cumple el 1 de marzo."""
     antes_del_cumpleanos = (hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day)
     return hoy.year - fecha_nacimiento.year - antes_del_cumpleanos
+
+
+def calorias_objetivo(sexo, peso, altura_cm, edad):
+    """Gasto en reposo (Mifflin-St Jeor), mantenimiento y objetivo diario en kcal.
+
+    Comer menos que el mantenimiento ya es déficit. Devuelve None si falta
+    algún dato del perfil.
+    """
+    if sexo not in MINIMO_CALORIAS or peso is None or altura_cm is None or edad is None:
+        return None
+    reposo = 10 * float(peso) + 6.25 * altura_cm - 5 * edad + (5 if sexo == "M" else -161)
+    mantenimiento = reposo * FACTOR_SEDENTARIO
+    return {
+        "reposo": round(reposo),
+        "mantenimiento": round(mantenimiento),
+        "objetivo": round(max(mantenimiento - DEFICIT, MINIMO_CALORIAS[sexo])),
+        "deficit": DEFICIT,
+        "minimo": MINIMO_CALORIAS[sexo],
+    }
+
+
+def objetivo_del_dia(objetivo, calorias_activas):
+    """Las calorías activas del día (ejercicio, movimiento) se suman al objetivo."""
+    return objetivo + (calorias_activas or 0)
 
 
 def progreso(peso_inicial, peso_meta, peso_actual):
