@@ -238,6 +238,7 @@ def graficas(request):
     filas = registros.filter(fecha__gte=desde - timedelta(days=6), fecha__lte=hoy)
     pesajes = {r.fecha: float(r.peso) for r in filas if r.peso is not None}
     pasos = {r.fecha: r.pasos for r in filas if r.pasos is not None}
+    activas = {r.fecha: r.calorias_activas for r in filas if r.calorias_activas is not None}
     calorias = dict(
         comidas.filter(fecha__gte=desde, fecha__lte=hoy).values("fecha").annotate(total=Sum("calorias"))
         .values_list("fecha", "total")
@@ -251,7 +252,12 @@ def graficas(request):
         "pasos": [pasos.get(f) for f in fechas],
         "meta_pasos": perfil.meta_pasos,
         "calorias": [calorias.get(f) for f in fechas],
+        "objetivo_calorias": None,
     }
+    # El objetivo de cada día usa el peso y la edad de hoy más las activas de ese día.
+    objetivo = calorias_del_perfil(perfil, peso_actual(request.user, perfil))
+    if objetivo:
+        datos["objetivo_calorias"] = [calculos.objetivo_del_dia(objetivo["objetivo"], activas.get(f)) for f in fechas]
     return render(
         request,
         "seguimiento/graficas.html",
@@ -262,6 +268,10 @@ def graficas(request):
             "hay_peso": any(v is not None for v in datos["peso"]),
             "hay_pasos": any(v is not None for v in datos["pasos"]),
             "hay_calorias": any(v is not None for v in datos["calorias"]),
+            "en_objetivo": (
+                calculos.dias_en_objetivo(datos["calorias"], datos["objetivo_calorias"])
+                if datos["objetivo_calorias"] else None
+            ),
         },
     )
 

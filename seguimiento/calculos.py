@@ -82,6 +82,16 @@ def objetivo_del_dia(objetivo, calorias_activas):
     return objetivo + (calorias_activas or 0)
 
 
+def dias_en_objetivo(calorias, objetivos):
+    """Cuántos de los días con comidas quedaron en o por debajo de su objetivo.
+
+    `calorias` y `objetivos` son listas paralelas, un valor por día; None en
+    calorías es un día sin comidas y no cuenta.
+    """
+    dias = [(c, o) for c, o in zip(calorias, objetivos) if c is not None]
+    return {"dentro": sum(1 for c, o in dias if c <= o), "con_comidas": len(dias)}
+
+
 def progreso(peso_inicial, peso_meta, peso_actual):
     """Kilos perdidos, kilos que faltan y fracción del camino recorrido (0 a 1)."""
     perdidos = peso_inicial - peso_actual

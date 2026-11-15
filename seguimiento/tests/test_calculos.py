@@ -98,3 +98,11 @@ class ObjetivoDelDiaTests(SimpleTestCase):
 
     def test_sin_calorias_activas_queda_el_objetivo(self):
         self.assertEqual(calculos.objetivo_del_dia(1500, None), 1500)
+
+
+class DiasEnObjetivoTests(SimpleTestCase):
+    def test_cuenta_solo_dias_con_comidas(self):
+        calorias = [1500, None, 2100, 1800]
+        objetivos = [1700, 1700, 2050, 1800]
+        # 1500 ≤ 1700 y 1800 ≤ 1800 quedan dentro; el día sin comidas no cuenta.
+        self.assertEqual(calculos.dias_en_objetivo(calorias, objetivos), {"dentro": 2, "con_comidas": 3})
