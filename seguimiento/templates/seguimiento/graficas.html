@@ -34,7 +34,7 @@
     <div class="grafica"><canvas id="grafica-calorias" aria-label="Calorías consumidas por día y objetivo de cada día"></canvas></div>
     {% if en_objetivo %}
       <p class="ruta-nota">
-        {{ en_objetivo.dentro }} de {{ en_objetivo.con_comidas }} días con comidas quedaron dentro del objetivo.
+        {% if en_objetivo.con_comidas %}{{ en_objetivo.dentro }} de {{ en_objetivo.con_comidas }} días con comidas, sin contar hoy, quedaron dentro del objetivo.{% endif %}
         El objetivo sube los días con calorías activas.
       </p>
     {% else %}
