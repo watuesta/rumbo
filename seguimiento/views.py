@@ -83,6 +83,8 @@ def inicio(request):
         "seguimiento/inicio.html",
         {
             "perfil": perfil,
+            "nombre": request.user.first_name or request.user.get_username(),
+            "edad": calculos.edad(perfil.fecha_nacimiento, hoy) if perfil.fecha_nacimiento else None,
             "ultimo": ultimo,
             "peso_actual": peso,
             "progreso": calculos.progreso(perfil.peso_inicial, perfil.peso_meta, peso),

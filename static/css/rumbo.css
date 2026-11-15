@@ -191,6 +191,16 @@ h2 {
   padding-top: 0.5rem;
 }
 
+.ruta-quien {
+  margin-bottom: 0.9rem;
+}
+.ruta-quien span {
+  margin-left: 0.2em;
+  font-size: 0.75em;
+  font-weight: 400;
+  color: var(--tenue);
+}
+
 .ruta-cifra {
   margin: 0;
   font-size: clamp(4.5rem, 24vw, 7rem);

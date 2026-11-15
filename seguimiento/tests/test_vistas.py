@@ -369,3 +369,21 @@ class GraficaCaloriasTests(TestCase):
         self.assertIsNone(respuesta.context["datos"]["objetivo_calorias"])
         self.assertContains(respuesta, "para ver tu objetivo en la gráfica")
 
+
+class InicioNombreTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+
+    def test_muestra_nombre_y_edad(self):
+        self.usuario.first_name = "Ana"
+        self.usuario.save()
+        completar_perfil(self.usuario)
+        respuesta = self.client.get(reverse("inicio"))
+        edad = calculos.edad(date(1990, 5, 20), timezone.localdate())
+        self.assertContains(respuesta, f"Ana <span>{edad} años</span>", html=False)
+
+    def test_sin_nombre_ni_nacimiento_usa_el_usuario(self):
+        respuesta = self.client.get(reverse("inicio"))
+        self.assertIsNone(respuesta.context["edad"])
+        self.assertContains(respuesta, '<h1 class="ruta-quien">ana</h1>', html=True)

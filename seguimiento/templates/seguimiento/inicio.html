@@ -2,6 +2,7 @@
 {% load formato %}
 {% block contenido %}
 <section class="ruta" aria-label="Tu avance">
+  <h1 class="ruta-quien">{{ nombre }}{% if edad is not None %} <span>{{ edad }} años</span>{% endif %}</h1>
   <p class="ruta-cifra">{{ peso_actual|kg }}<small>kg</small></p>
   <p class="ruta-nota">
     {% if ultimo %}Último pesaje: {{ ultimo.fecha|date:"j \d\e F"|lower }}{% else %}Peso inicial. Registra tu primer pesaje.{% endif %}
