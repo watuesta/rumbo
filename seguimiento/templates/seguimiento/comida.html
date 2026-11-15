@@ -10,7 +10,7 @@
   {% csrf_token %}
   <div class="campos">
     {% include "campo.html" with campo=form.calorias %}
-    {% include "campo.html" with campo=form.descripcion %}
+    {% include "campo.html" with campo=form.descripcion ancho=True %}
   </div>
   <button type="submit" class="boton">Guardar comida</button>
   <a class="boton boton-secundario" href="{% url 'dia' comida.fecha.isoformat %}">Cancelar</a>
