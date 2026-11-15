@@ -56,10 +56,16 @@ def peso_actual(usuario, perfil):
     return ultimo.peso if ultimo else perfil.peso_inicial
 
 
+def edad_del_perfil(perfil):
+    """Edad de hoy, o None si el perfil no tiene fecha de nacimiento."""
+    if perfil.fecha_nacimiento is None:
+        return None
+    return calculos.edad(perfil.fecha_nacimiento, timezone.localdate())
+
+
 def calorias_del_perfil(perfil, peso):
     """Objetivo de calorías con el peso dado y la edad de hoy; None si faltan datos."""
-    edad = calculos.edad(perfil.fecha_nacimiento, timezone.localdate()) if perfil.fecha_nacimiento else None
-    return calculos.calorias_objetivo(perfil.sexo, peso, perfil.altura_cm, edad)
+    return calculos.calorias_objetivo(perfil.sexo, peso, perfil.altura_cm, edad_del_perfil(perfil))
 
 
 @perfil_requerido
@@ -83,6 +89,8 @@ def inicio(request):
         "seguimiento/inicio.html",
         {
             "perfil": perfil,
+            "nombre": request.user.first_name or request.user.get_username(),
+            "edad": edad_del_perfil(perfil),
             "ultimo": ultimo,
             "peso_actual": peso,
             "progreso": calculos.progreso(perfil.peso_inicial, perfil.peso_meta, peso),
@@ -238,6 +246,7 @@ def graficas(request):
     filas = registros.filter(fecha__gte=desde - timedelta(days=6), fecha__lte=hoy)
     pesajes = {r.fecha: float(r.peso) for r in filas if r.peso is not None}
     pasos = {r.fecha: r.pasos for r in filas if r.pasos is not None}
+    activas = {r.fecha: r.calorias_activas for r in filas if r.calorias_activas is not None}
     calorias = dict(
         comidas.filter(fecha__gte=desde, fecha__lte=hoy).values("fecha").annotate(total=Sum("calorias"))
         .values_list("fecha", "total")
@@ -252,6 +261,15 @@ def graficas(request):
         "meta_pasos": perfil.meta_pasos,
         "calorias": [calorias.get(f) for f in fechas],
     }
+    # El objetivo de cada día usa el peso y la edad de hoy más las activas de ese día.
+    objetivo = calorias_del_perfil(perfil, peso_actual(request.user, perfil))
+    datos["objetivo_calorias"] = (
+        [calculos.objetivo_del_dia(objetivo["objetivo"], activas.get(f)) for f in fechas] if objetivo else None
+    )
+    # Hoy no ha terminado: el resumen solo cuenta los días anteriores (el último es hoy).
+    en_objetivo = (
+        calculos.dias_en_objetivo(datos["calorias"][:-1], datos["objetivo_calorias"][:-1]) if objetivo else None
+    )
     return render(
         request,
         "seguimiento/graficas.html",
@@ -262,6 +280,7 @@ def graficas(request):
             "hay_peso": any(v is not None for v in datos["peso"]),
             "hay_pasos": any(v is not None for v in datos["pasos"]),
             "hay_calorias": any(v is not None for v in datos["calorias"]),
+            "en_objetivo": en_objetivo,
         },
     )
 
@@ -275,8 +294,7 @@ def perfil(request):
     if actual is not None:
         contexto["peso_actual"] = peso_actual(request.user, actual)
         contexto["calorias"] = calorias_del_perfil(actual, contexto["peso_actual"])
-        if actual.fecha_nacimiento:
-            contexto["edad"] = calculos.edad(actual.fecha_nacimiento, timezone.localdate())
+        contexto["edad"] = edad_del_perfil(actual)
         contexto["faltan_datos"] = not (actual.sexo and actual.fecha_nacimiento and actual.altura_cm)
 
     if request.method == "POST":

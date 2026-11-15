@@ -15,13 +15,18 @@
     return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
   }
 
+  // `valor` es una meta fija o una lista con la meta de cada día.
   function lineaMeta(valor, etiqueta) {
+    var porDia = Array.isArray(valor);
     return {
       type: "line",
       label: etiqueta,
-      data: datos.fechas.map(function () {
-        return valor;
-      }),
+      data: porDia
+        ? valor
+        : datos.fechas.map(function () {
+            return valor;
+          }),
+      stepped: porDia ? "middle" : false,
       borderColor: color("--tenue"),
       borderDash: [6, 6],
       borderWidth: 1.5,
@@ -124,7 +129,9 @@
         type: "bar",
         data: {
           labels: etiquetas,
-          datasets: [{ label: "Calorías del día", data: datos.calorias, backgroundColor: texto, borderRadius: 3 }],
+          datasets: [
+            { label: "Consumidas", data: datos.calorias, backgroundColor: texto, borderRadius: 3, order: 1 },
+          ].concat(datos.objetivo_calorias ? [lineaMeta(datos.objetivo_calorias, "Objetivo del día")] : []),
         },
         options: opciones("kcal"),
       },

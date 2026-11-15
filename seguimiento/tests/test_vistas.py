@@ -264,14 +264,14 @@ class DatosPerfilTests(TestCase):
         respuesta = self.client.post(reverse("perfil"), datos_perfil(first_name="Pepe", altura_cm="50"))
         self.assertEqual(respuesta.status_code, 200)
         self.assertTrue(respuesta.context["faltan_datos"])
-        self.assertNotIn("edad", respuesta.context)
+        self.assertIsNone(respuesta.context["edad"])
         self.assertContains(respuesta, "Salir de ana")
 
     def test_perfil_viejo_sin_datos_nuevos_sigue_funcionando(self):
         self.assertEqual(self.client.get(reverse("inicio")).status_code, 200)
         contexto = self.client.get(reverse("perfil")).context
         self.assertTrue(contexto["faltan_datos"])
-        self.assertNotIn("edad", contexto)
+        self.assertIsNone(contexto["edad"])
 
 
 def completar_perfil(usuario):
@@ -343,3 +343,56 @@ class CaloriasActivasTests(TestCase):
         RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, pasos=8000, calorias_activas=350)
         fila = self.client.get(reverse("historial")).context["pagina"][0]
         self.assertEqual(fila["datos"], [(8000, "pasos"), (350, "kcal activas")])
+
+
+class GraficaCaloriasTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+        self.hoy = timezone.localdate()
+        self.url = reverse("graficas") + "?rango=30"
+
+    def test_objetivo_de_cada_dia_suma_las_activas(self):
+        objetivo = completar_perfil(self.usuario)
+        ayer = self.hoy - timedelta(days=1)
+        RegistroDiario.objects.create(usuario=self.usuario, fecha=ayer, calorias_activas=400)
+        Comida.objects.create(usuario=self.usuario, fecha=ayer, calorias=objetivo + 300)
+        Comida.objects.create(usuario=self.usuario, fecha=self.hoy, calorias=objetivo + 300)
+        anteayer = self.hoy - timedelta(days=2)
+        Comida.objects.create(usuario=self.usuario, fecha=anteayer, calorias=objetivo + 300)
+        contexto = self.client.get(self.url).context
+        self.assertEqual(contexto["datos"]["objetivo_calorias"][-2:], [objetivo + 400, objetivo])
+        # Ayer las activas lo dejan dentro, anteayer se pasó y hoy no cuenta porque no ha terminado.
+        self.assertEqual(contexto["en_objetivo"], {"dentro": 1, "con_comidas": 2})
+
+    def test_la_linea_usa_el_ultimo_pesaje(self):
+        completar_perfil(self.usuario)
+        RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, peso=Decimal("80"))
+        esperado = calculos.calorias_objetivo("F", Decimal("80"), 165, calculos.edad(date(1990, 5, 20), self.hoy))
+        objetivos = self.client.get(self.url).context["datos"]["objetivo_calorias"]
+        self.assertEqual(objetivos[-1], esperado["objetivo"])
+
+    def test_sin_datos_del_perfil_no_hay_linea_de_objetivo(self):
+        Comida.objects.create(usuario=self.usuario, fecha=self.hoy, calorias=1500)
+        respuesta = self.client.get(self.url)
+        self.assertIsNone(respuesta.context["datos"]["objetivo_calorias"])
+        self.assertContains(respuesta, "para ver tu objetivo en la gráfica")
+
+
+class InicioNombreTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+
+    def test_muestra_nombre_y_edad(self):
+        self.usuario.first_name = "Ana"
+        self.usuario.save()
+        completar_perfil(self.usuario)
+        respuesta = self.client.get(reverse("inicio"))
+        edad = calculos.edad(self.usuario.perfil.fecha_nacimiento, timezone.localdate())
+        self.assertContains(respuesta, f"Ana <span>{edad} años</span>", html=False)
+
+    def test_sin_nombre_ni_nacimiento_usa_el_usuario(self):
+        respuesta = self.client.get(reverse("inicio"))
+        self.assertIsNone(respuesta.context["edad"])
+        self.assertContains(respuesta, '<h1 class="ruta-quien">ana</h1>', html=True)

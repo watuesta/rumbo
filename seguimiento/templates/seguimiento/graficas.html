@@ -31,7 +31,15 @@
 <section class="seccion">
   <h2>Calorías</h2>
   {% if hay_calorias %}
-    <div class="grafica"><canvas id="grafica-calorias" aria-label="Calorías totales por día"></canvas></div>
+    <div class="grafica"><canvas id="grafica-calorias" aria-label="Calorías consumidas por día y objetivo de cada día"></canvas></div>
+    {% if en_objetivo %}
+      <p class="ruta-nota">
+        {% if en_objetivo.con_comidas %}{{ en_objetivo.dentro }} de {{ en_objetivo.con_comidas }} días con comidas, sin contar hoy, quedaron dentro del objetivo.{% endif %}
+        El objetivo sube los días con calorías activas.
+      </p>
+    {% else %}
+      <p class="ruta-nota"><a href="{% url 'perfil' %}">Completa tu perfil</a> para ver tu objetivo en la gráfica.</p>
+    {% endif %}
   {% else %}
     <p class="vacio">Sin comidas en este rango.</p>
   {% endif %}
