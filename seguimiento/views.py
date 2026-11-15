@@ -238,6 +238,16 @@ def graficas(request):
 @login_required
 def perfil(request):
     actual = Perfil.objects.filter(usuario=request.user).first()
+    # El resumen se arma antes de validar: los formularios copian lo enviado al
+    # perfil y al usuario aunque no se guarde, y el resumen debe mostrar lo guardado.
+    contexto = {"nuevo": actual is None, "nombre": request.user.first_name or request.user.get_username()}
+    if actual is not None:
+        ultimo = ultimo_pesaje(request.user)
+        contexto["peso_actual"] = ultimo.peso if ultimo else actual.peso_inicial
+        if actual.fecha_nacimiento:
+            contexto["edad"] = calculos.edad(actual.fecha_nacimiento, timezone.localdate())
+        contexto["faltan_datos"] = not (actual.sexo and actual.fecha_nacimiento and actual.altura_cm)
+
     if request.method == "POST":
         form = PerfilForm(request.POST, instance=actual)
         usuario_form = UsuarioForm(request.POST, instance=request.user)
@@ -253,13 +263,7 @@ def perfil(request):
         form = PerfilForm(instance=actual, initial=inicial)
         usuario_form = UsuarioForm(instance=request.user)
 
-    contexto = {"form": form, "usuario_form": usuario_form, "nuevo": actual is None}
-    if actual is not None:
-        ultimo = ultimo_pesaje(request.user)
-        contexto["peso_actual"] = ultimo.peso if ultimo else actual.peso_inicial
-        if actual.fecha_nacimiento:
-            contexto["edad"] = calculos.edad(actual.fecha_nacimiento, timezone.localdate())
-        contexto["faltan_datos"] = not (actual.sexo and actual.fecha_nacimiento and actual.altura_cm)
+    contexto.update(form=form, usuario_form=usuario_form)
     return render(request, "seguimiento/perfil.html", contexto)
 
 

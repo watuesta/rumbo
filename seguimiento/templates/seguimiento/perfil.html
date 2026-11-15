@@ -51,7 +51,7 @@
 
 <form method="post" action="{% url 'salir' %}">
   {% csrf_token %}
-  <button type="submit" class="boton boton-secundario">Salir de {{ user.first_name|default:user.get_username }}</button>
+  <button type="submit" class="boton boton-secundario">Salir de {{ nombre }}</button>
 </form>
 
 {% if user.is_staff %}

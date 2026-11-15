@@ -260,6 +260,13 @@ class DatosPerfilTests(TestCase):
             self.assertTrue(respuesta.context["form"].has_error(campo))
         self.assertTrue(respuesta.context["usuario_form"].has_error("first_name"))
 
+    def test_envio_con_errores_no_cambia_el_resumen(self):
+        respuesta = self.client.post(reverse("perfil"), datos_perfil(first_name="Pepe", altura_cm="50"))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.context["faltan_datos"])
+        self.assertNotIn("edad", respuesta.context)
+        self.assertContains(respuesta, "Salir de ana")
+
     def test_perfil_viejo_sin_datos_nuevos_sigue_funcionando(self):
         self.assertEqual(self.client.get(reverse("inicio")).status_code, 200)
         contexto = self.client.get(reverse("perfil")).context
