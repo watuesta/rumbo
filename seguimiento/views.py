@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import calculos
-from .forms import ComidaForm, PerfilForm, RegistroDiarioForm
+from .forms import ComidaForm, PerfilForm, RegistroDiarioForm, UsuarioForm
 from .models import Comida, Perfil, RegistroDiario
 
 
@@ -47,13 +47,15 @@ def fecha_valida(texto):
     return fecha
 
 
+def ultimo_pesaje(usuario):
+    return RegistroDiario.objects.filter(usuario=usuario, peso__isnull=False).order_by("-fecha").first()
+
+
 @perfil_requerido
 def inicio(request):
     perfil = request.perfil
     hoy = timezone.localdate()
-    ultimo = (
-        RegistroDiario.objects.filter(usuario=request.user, peso__isnull=False).order_by("-fecha").first()
-    )
+    ultimo = ultimo_pesaje(request.user)
     pasos_semana = dict(
         RegistroDiario.objects.filter(
             usuario=request.user, fecha__gte=hoy - timedelta(days=hoy.weekday())
@@ -236,9 +238,21 @@ def graficas(request):
 @login_required
 def perfil(request):
     actual = Perfil.objects.filter(usuario=request.user).first()
+    # El resumen se arma antes de validar: los formularios copian lo enviado al
+    # perfil y al usuario aunque no se guarde, y el resumen debe mostrar lo guardado.
+    contexto = {"nuevo": actual is None, "nombre": request.user.first_name or request.user.get_username()}
+    if actual is not None:
+        ultimo = ultimo_pesaje(request.user)
+        contexto["peso_actual"] = ultimo.peso if ultimo else actual.peso_inicial
+        if actual.fecha_nacimiento:
+            contexto["edad"] = calculos.edad(actual.fecha_nacimiento, timezone.localdate())
+        contexto["faltan_datos"] = not (actual.sexo and actual.fecha_nacimiento and actual.altura_cm)
+
     if request.method == "POST":
         form = PerfilForm(request.POST, instance=actual)
-        if form.is_valid():
+        usuario_form = UsuarioForm(request.POST, instance=request.user)
+        if all([form.is_valid(), usuario_form.is_valid()]):
+            usuario_form.save()
             nuevo = form.save(commit=False)
             nuevo.usuario = request.user
             nuevo.save()
@@ -247,7 +261,10 @@ def perfil(request):
     else:
         inicial = {"fecha_inicio": timezone.localdate()} if actual is None else None
         form = PerfilForm(instance=actual, initial=inicial)
-    return render(request, "seguimiento/perfil.html", {"form": form, "nuevo": actual is None})
+        usuario_form = UsuarioForm(instance=request.user)
+
+    contexto.update(form=form, usuario_form=usuario_form)
+    return render(request, "seguimiento/perfil.html", contexto)
 
 
 class CambiarContrasena(SuccessMessageMixin, PasswordChangeView):

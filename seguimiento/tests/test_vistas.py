@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from seguimiento import calculos
 from seguimiento.models import Comida, Perfil, RegistroDiario
 
 
@@ -15,6 +16,15 @@ def crear_usuario(nombre):
         usuario=usuario, peso_inicial=Decimal("90.0"), peso_meta=Decimal("80.0"), fecha_inicio=date(2026, 1, 1)
     )
     return usuario
+
+
+def datos_perfil(**cambios):
+    """POST válido del formulario de perfil, con datos inventados."""
+    datos = {
+        "first_name": "Ana", "email": "", "sexo": "F", "fecha_nacimiento": "1990-05-20", "altura_cm": "165",
+        "peso_inicial": "92,5", "peso_meta": "75", "fecha_inicio": "2026-11-01", "meta_pasos": "8000",
+    }
+    return {**datos, **cambios}
 
 
 class AccesoTests(TestCase):
@@ -28,19 +38,13 @@ class AccesoTests(TestCase):
 
     def test_crear_perfil_acepta_coma_decimal(self):
         self.client.force_login(User.objects.create_user("nuevo"))
-        respuesta = self.client.post(
-            reverse("perfil"),
-            {"peso_inicial": "92,5", "peso_meta": "75", "fecha_inicio": "2026-11-01", "meta_pasos": "8000"},
-        )
+        respuesta = self.client.post(reverse("perfil"), datos_perfil())
         self.assertRedirects(respuesta, reverse("inicio"))
         self.assertEqual(Perfil.objects.get().peso_inicial, Decimal("92.5"))
 
     def test_meta_mayor_que_inicio_es_invalida(self):
         self.client.force_login(User.objects.create_user("nuevo"))
-        respuesta = self.client.post(
-            reverse("perfil"),
-            {"peso_inicial": "80", "peso_meta": "85", "fecha_inicio": "2026-11-01", "meta_pasos": "8000"},
-        )
+        respuesta = self.client.post(reverse("perfil"), datos_perfil(peso_inicial="80", peso_meta="85"))
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(Perfil.objects.exists())
 
@@ -226,3 +230,45 @@ class ContrasenaTests(TestCase):
         self.client.logout()
         respuesta = self.client.get(self.url)
         self.assertRedirects(respuesta, f"{reverse('entrar')}?next={self.url}")
+
+
+class DatosPerfilTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+
+    def test_guarda_datos_personales_y_muestra_la_edad(self):
+        respuesta = self.client.post(reverse("perfil"), datos_perfil(email="ana@ejemplo.com"))
+        self.assertRedirects(respuesta, reverse("perfil"))
+        self.usuario.refresh_from_db()
+        perfil = self.usuario.perfil
+        self.assertEqual((self.usuario.first_name, self.usuario.email), ("Ana", "ana@ejemplo.com"))
+        self.assertEqual((perfil.sexo, perfil.altura_cm, perfil.fecha_nacimiento), ("F", 165, date(1990, 5, 20)))
+        hoy = timezone.localdate()
+        self.assertEqual(self.client.get(reverse("perfil")).context["edad"], calculos.edad(date(1990, 5, 20), hoy))
+
+    def test_fecha_de_nacimiento_futura_es_invalida(self):
+        manana = (timezone.localdate() + timedelta(days=1)).isoformat()
+        respuesta = self.client.post(reverse("perfil"), datos_perfil(fecha_nacimiento=manana))
+        self.assertContains(respuesta, "Revisa la fecha de nacimiento")
+        self.assertIsNone(Perfil.objects.get().fecha_nacimiento)
+
+    def test_nombre_y_datos_nuevos_son_obligatorios(self):
+        respuesta = self.client.post(reverse("perfil"), datos_perfil(first_name="", sexo="", altura_cm=""))
+        self.assertEqual(respuesta.status_code, 200)
+        for campo in ("sexo", "altura_cm"):
+            self.assertTrue(respuesta.context["form"].has_error(campo))
+        self.assertTrue(respuesta.context["usuario_form"].has_error("first_name"))
+
+    def test_envio_con_errores_no_cambia_el_resumen(self):
+        respuesta = self.client.post(reverse("perfil"), datos_perfil(first_name="Pepe", altura_cm="50"))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.context["faltan_datos"])
+        self.assertNotIn("edad", respuesta.context)
+        self.assertContains(respuesta, "Salir de ana")
+
+    def test_perfil_viejo_sin_datos_nuevos_sigue_funcionando(self):
+        self.assertEqual(self.client.get(reverse("inicio")).status_code, 200)
+        contexto = self.client.get(reverse("perfil")).context
+        self.assertTrue(contexto["faltan_datos"])
+        self.assertNotIn("edad", contexto)

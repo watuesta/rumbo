@@ -392,6 +392,7 @@ h2 {
   color: var(--tenue);
 }
 .campo input,
+.campo select,
 .campo textarea {
   width: 100%;
   min-height: 3.25rem;
@@ -416,6 +417,20 @@ h2 {
   resize: vertical;
   field-sizing: content;
 }
+/* Sin el estilo nativo; la flecha se dibuja con dos degradados del color tenue. */
+.campo select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--tenue) 50%),
+    linear-gradient(135deg, var(--tenue) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.25rem) 50%,
+    calc(100% - 0.9rem) 50%;
+  background-size: 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+}
 /* Safari de iOS dibuja la fecha centrada y con alto y ancho propios. */
 .campo input[type="date"] {
   -webkit-appearance: none;
@@ -433,11 +448,13 @@ h2 {
   opacity: 0.6;
 }
 .campo input:focus,
+.campo select:focus,
 .campo textarea:focus {
   border-color: var(--acento);
   outline: none;
 }
 .campo input[aria-invalid="true"],
+.campo select[aria-invalid="true"],
 .campo textarea[aria-invalid="true"] {
   border-color: var(--peligro);
 }
@@ -449,6 +466,10 @@ h2 {
 }
 .form > * + * {
   margin-top: 1rem;
+}
+/* Separa los grupos de campos de un formulario largo. */
+.form > .campos + h2 {
+  margin-top: 2rem;
 }
 
 /* ---------- Día ---------- */

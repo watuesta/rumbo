@@ -58,3 +58,13 @@ class InicioDeRangoTests(SimpleTestCase):
         self.assertEqual(calculos.inicio_de_rango("todo", hoy, date(2026, 1, 5)), date(2026, 1, 5))
         self.assertEqual(calculos.inicio_de_rango("todo", hoy, None), hoy)
         self.assertEqual(calculos.inicio_de_rango("90", hoy, None), date(2026, 9, 2))
+
+
+class EdadTests(SimpleTestCase):
+    def test_cumple_anos_el_dia_del_cumpleanos(self):
+        self.assertEqual(calculos.edad(date(1990, 5, 20), date(2026, 5, 19)), 35)
+        self.assertEqual(calculos.edad(date(1990, 5, 20), date(2026, 5, 20)), 36)
+
+    def test_nacido_el_29_de_febrero_cumple_el_1_de_marzo(self):
+        self.assertEqual(calculos.edad(date(2000, 2, 29), date(2026, 2, 28)), 25)
+        self.assertEqual(calculos.edad(date(2000, 2, 29), date(2026, 3, 1)), 26)
