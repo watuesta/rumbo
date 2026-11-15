@@ -46,6 +46,12 @@ def promedio_pasos_semana(pasos_por_fecha, hoy):
     return round(sum(valores) / len(valores)) if valores else None
 
 
+def edad(fecha_nacimiento, hoy):
+    """Años cumplidos. Quien nació un 29 de febrero los cumple el 1 de marzo."""
+    antes_del_cumpleanos = (hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day)
+    return hoy.year - fecha_nacimiento.year - antes_del_cumpleanos
+
+
 def progreso(peso_inicial, peso_meta, peso_actual):
     """Kilos perdidos, kilos que faltan y fracción del camino recorrido (0 a 1)."""
     perdidos = peso_inicial - peso_actual

@@ -1,5 +1,8 @@
 from django import forms
+from django.contrib.auth.models import User
+from django.utils import timezone
 
+from . import calculos
 from .models import Comida, Perfil, RegistroDiario
 
 
@@ -22,17 +25,53 @@ def entero_widget(placeholder=""):
     )
 
 
+class UsuarioForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "email"]
+        labels = {"first_name": "Nombre", "email": "Email"}
+        widgets = {
+            "first_name": forms.TextInput(attrs={"autocomplete": "given-name"}),
+            "email": forms.EmailInput(attrs={"autocomplete": "email", "placeholder": "Opcional"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].required = True
+
+
 class PerfilForm(forms.ModelForm):
+    EDAD_MINIMA, EDAD_MAXIMA = 14, 100
+
     class Meta:
         model = Perfil
-        fields = ["peso_inicial", "fecha_inicio", "peso_meta", "meta_pasos"]
+        fields = [
+            "sexo", "fecha_nacimiento", "altura_cm",
+            "peso_inicial", "fecha_inicio", "peso_meta", "meta_pasos",
+        ]
         field_classes = {"peso_inicial": DecimalFlexible, "peso_meta": DecimalFlexible}
+        labels = {"fecha_nacimiento": "Fecha de nacimiento", "altura_cm": "Altura (cm)"}
         widgets = {
+            "fecha_nacimiento": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "altura_cm": entero_widget(),
             "peso_inicial": decimal_widget(),
             "peso_meta": decimal_widget(),
             "fecha_inicio": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "meta_pasos": entero_widget(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nombre in ("sexo", "fecha_nacimiento", "altura_cm"):
+            self.fields[nombre].required = True
+        self.fields["sexo"].choices = [("", "Elige"), *Perfil.SEXOS]
+
+    def clean_fecha_nacimiento(self):
+        nacimiento = self.cleaned_data["fecha_nacimiento"]
+        anos = calculos.edad(nacimiento, timezone.localdate())
+        if not self.EDAD_MINIMA <= anos <= self.EDAD_MAXIMA:
+            raise forms.ValidationError("Revisa la fecha de nacimiento.")
+        return nacimiento
 
     def clean(self):
         datos = super().clean()

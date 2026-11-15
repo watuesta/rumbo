@@ -24,12 +24,20 @@ def medida_field(verbose_name):
 
 
 class Perfil(models.Model):
+    SEXOS = [("F", "Mujer"), ("M", "Hombre")]
+
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="perfil")
     peso_inicial = peso_field(verbose_name="peso inicial (kg)")
     fecha_inicio = models.DateField("fecha de inicio")
     peso_meta = peso_field(verbose_name="peso meta (kg)")
     meta_pasos = models.PositiveIntegerField(
         "meta diaria de pasos", default=8000, validators=[MinValueValidator(1), MaxValueValidator(100_000)]
+    )
+    # Opcionales en la base porque hay perfiles creados antes; el formulario los exige.
+    sexo = models.CharField(max_length=1, choices=SEXOS, blank=True)
+    fecha_nacimiento = models.DateField("fecha de nacimiento", null=True, blank=True)
+    altura_cm = models.PositiveSmallIntegerField(
+        "altura (cm)", null=True, blank=True, validators=[MinValueValidator(100), MaxValueValidator(250)]
     )
 
     class Meta:

@@ -1,13 +1,41 @@
 {% extends "base.html" %}
+{% load formato %}
 {% block titulo %}Perfil · Rumbo{% endblock %}
 {% block contenido %}
 <div>
   <h1>{% if nuevo %}Tu punto de partida{% else %}Perfil{% endif %}</h1>
-  {% if nuevo %}<p class="ruta-nota">Con estos datos Rumbo calcula cuánto has avanzado y cuánto falta.</p>{% endif %}
+  {% if nuevo %}
+    <p class="ruta-nota">Con estos datos Rumbo calcula cuánto has avanzado y cuánto falta.</p>
+  {% elif faltan_datos %}
+    <p class="ruta-nota">Completa sexo, fecha de nacimiento y altura para ver tu edad.</p>
+  {% endif %}
 </div>
+
+{% if not nuevo %}
+  <dl class="cifras">
+    <div>
+      <dt>Edad</dt>
+      <dd>{% if edad is not None %}{{ edad }}<small>años</small>{% else %}–{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Peso actual</dt>
+      <dd>{{ peso_actual|kg }}<small>kg</small></dd>
+    </div>
+  </dl>
+{% endif %}
 
 <form method="post" class="form" novalidate>
   {% csrf_token %}
+  <h2>Tus datos</h2>
+  <div class="campos">
+    {% include "campo.html" with campo=usuario_form.first_name ancho=True %}
+    {% include "campo.html" with campo=usuario_form.email ancho=True %}
+    {% include "campo.html" with campo=form.sexo %}
+    {% include "campo.html" with campo=form.altura_cm %}
+    {% include "campo.html" with campo=form.fecha_nacimiento ancho=True %}
+  </div>
+
+  <h2>Tu meta</h2>
   <div class="campos">
     {% include "campo.html" with campo=form.peso_inicial %}
     {% include "campo.html" with campo=form.peso_meta %}
@@ -23,7 +51,7 @@
 
 <form method="post" action="{% url 'salir' %}">
   {% csrf_token %}
-  <button type="submit" class="boton boton-secundario">Salir de {{ user.get_username }}</button>
+  <button type="submit" class="boton boton-secundario">Salir de {{ user.first_name|default:user.get_username }}</button>
 </form>
 
 {% if user.is_staff %}
