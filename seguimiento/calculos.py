@@ -64,7 +64,7 @@ def calorias_objetivo(sexo, peso, altura_cm, edad):
     Comer menos que el mantenimiento ya es déficit. Devuelve None si falta
     algún dato del perfil.
     """
-    if not sexo or peso is None or altura_cm is None or edad is None:
+    if sexo not in MINIMO_CALORIAS or peso is None or altura_cm is None or edad is None:
         return None
     reposo = 10 * float(peso) + 6.25 * altura_cm - 5 * edad + (5 if sexo == "M" else -161)
     mantenimiento = reposo * FACTOR_SEDENTARIO
@@ -72,6 +72,7 @@ def calorias_objetivo(sexo, peso, altura_cm, edad):
         "reposo": round(reposo),
         "mantenimiento": round(mantenimiento),
         "objetivo": round(max(mantenimiento - DEFICIT, MINIMO_CALORIAS[sexo])),
+        "deficit": DEFICIT,
         "minimo": MINIMO_CALORIAS[sexo],
     }
 

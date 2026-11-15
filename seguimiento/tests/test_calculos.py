@@ -87,5 +87,6 @@ class CaloriasObjetivoTests(SimpleTestCase):
 
     def test_sin_datos_completos_no_hay_objetivo(self):
         self.assertIsNone(calculos.calorias_objetivo("", Decimal("70"), 165, 30))
+        self.assertIsNone(calculos.calorias_objetivo("X", Decimal("70"), 165, 30))
         self.assertIsNone(calculos.calorias_objetivo("F", Decimal("70"), None, 30))
         self.assertIsNone(calculos.calorias_objetivo("F", Decimal("70"), 165, None))

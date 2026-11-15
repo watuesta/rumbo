@@ -299,7 +299,6 @@ class CaloriasObjetivoVistasTests(TestCase):
         # La app separa los miles con punto.
         objetivo = f"{self.objetivo:,}".replace(",", ".")
         self.assertContains(respuesta, f"3.000 de {objetivo} kcal")
-        self.assertEqual(respuesta.context["restan"], self.objetivo - 3000)
 
     def test_usa_el_ultimo_pesaje(self):
         RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, peso=Decimal("80"))

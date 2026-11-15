@@ -151,7 +151,6 @@ def render_dia(request, fecha, registro, form, comida_form):
             "comidas": comidas,
             "total_calorias": total_calorias,
             "calorias": calorias,
-            "restan": calorias["objetivo"] - total_calorias if calorias else None,
         },
     )
 
