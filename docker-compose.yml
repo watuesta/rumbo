@@ -36,5 +36,39 @@ services:
       timeout: 5s
       retries: 10
 
+  # Respalda la base de datos con pg_dump al arrancar y luego cada 24 horas, en
+  # BACKUP_DIR del NAS. Reiniciar este contenedor fuerza un respaldo inmediato.
+  # El script va aquí porque Portainer CE no monta archivos del repo.
+  backup:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGDATABASE: ${POSTGRES_DB:-rumbo}
+      PGUSER: ${POSTGRES_USER:-rumbo}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+      RETENCION_DIAS: ${BACKUP_RETENCION_DIAS:-30}
+      TZ: America/Bogota
+    volumes:
+      - ${BACKUP_DIR:?Define BACKUP_DIR}:/respaldos
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          archivo="/respaldos/rumbo-$$(date +%Y-%m-%d_%H%M).dump"
+          if pg_dump --format=custom --file="$$archivo.tmp"; then
+            mv "$$archivo.tmp" "$$archivo"
+            echo "Respaldo creado: $$archivo ($$(du -h "$$archivo" | cut -f1))"
+          else
+            rm -f "$$archivo.tmp"
+            echo "ERROR: no se pudo crear el respaldo" >&2
+          fi
+          find /respaldos -name 'rumbo-*.dump' -mtime +$$RETENCION_DIAS -delete
+          sleep 86400
+        done
+
 volumes:
   rumbo_pgdata:

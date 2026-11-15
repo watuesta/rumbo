@@ -50,11 +50,14 @@ de tu NAS en la red local. Cámbialos por los tuyos.
 
 1. En Portainer, entra a **Stacks > Add stack**.
 2. Ponle de nombre `rumbo` y elige **Repository**.
-3. Completa:
+3. Antes de desplegar, crea la carpeta de los respaldos: en DSM, ve a
+   **Panel de control > Carpeta compartida**, crea una carpeta compartida
+   `backups` y, dentro, una subcarpeta `rumbo`.
+4. Completa:
    - **Repository URL:** `https://github.com/watuesta/rumbo`
    - **Repository reference:** `refs/heads/main`
    - **Compose path:** `docker-compose.yml`
-4. En **Environment variables**, agrega las variables de `.env.example` con sus
+5. En **Environment variables**, agrega las variables de `.env.example` con sus
    valores reales:
 
    | Variable | Valor |
@@ -66,12 +69,16 @@ de tu NAS en la red local. Cámbialos por los tuyos.
    | `POSTGRES_DB` | `rumbo` |
    | `POSTGRES_USER` | `rumbo` |
    | `POSTGRES_PASSWORD` | Una contraseña larga y aleatoria |
+   | `BACKUP_DIR` | `/volume1/backups/rumbo` (la carpeta del paso 3) |
+   | `BACKUP_RETENCION_DIAS` | `30`, opcional |
 
-5. Pulsa **Deploy the stack**. Portainer descarga el repo, construye la imagen
-   desde el `Dockerfile` y levanta dos contenedores:
+6. Pulsa **Deploy the stack**. Portainer descarga el repo, construye la imagen
+   desde el `Dockerfile` y levanta tres contenedores:
    - `web`: la app, publicada en el puerto **8130** del NAS.
    - `db`: PostgreSQL, sin puerto publicado. Sus datos quedan en el volumen
-     `rumbo_pgdata`.
+     `rumbo_pgdata` (Portainer lo muestra como `rumbo_rumbo_pgdata`).
+   - `backup`: respalda la base de datos todos los días en `BACKUP_DIR`. Ver
+     [Respaldos](#respaldos).
 
 Al arrancar, `web` aplica las migraciones y recopila los archivos estáticos por
 su cuenta.
@@ -95,7 +102,8 @@ solo viajan por HTTPS, así que el login no funciona si entras directo a
 
 1. En Portainer, ve a **Containers** y abre el contenedor `web` del stack
    `rumbo` (se llama algo como `rumbo-web-1`).
-2. Pulsa **Console**, deja el comando en `/bin/sh` y pulsa **Connect**.
+2. Pulsa **Console**, deja el comando en `/bin/bash`, escribe `rumbo` en
+   **User** y pulsa **Connect**.
 3. Ejecuta:
 
    ```sh
@@ -120,15 +128,61 @@ administración.
 ## Actualizar tras un cambio en el repo
 
 1. Haz push del cambio a `main` en GitHub.
-2. En Portainer, abre **Stacks > rumbo**.
-3. Pulsa **Pull and redeploy** y confirma. Activa **Re-pull image and
+2. Si el cambio toca modelos o migraciones, haz antes un respaldo: en
+   Portainer, reinicia el contenedor `rumbo-backup-1` y revisa en sus logs que
+   diga `Respaldo creado`.
+3. En Portainer, abre **Stacks > rumbo**.
+4. Pulsa **Pull and redeploy** y confirma. Activa **Re-pull image and
    redeploy** solo si cambió la imagen de Postgres; para cambios de la app no
    hace falta.
-4. Portainer descarga el código nuevo, reconstruye `web` y lo reinicia. Las
+5. Portainer descarga el código nuevo, reconstruye `web` y lo reinicia. Las
    migraciones nuevas se aplican solas al arrancar.
 
 Los datos de Postgres viven en el volumen `rumbo_pgdata` y se conservan entre
-despliegues. No borres ese volumen.
+despliegues, reinicios y aunque el contenedor `db` se recree. No borres ese
+volumen.
+
+## Respaldos
+
+El contenedor `backup` ejecuta `pg_dump` al arrancar y luego cada 24 horas.
+Guarda archivos como `rumbo-2026-11-14_0300.dump` en `BACKUP_DIR` y borra los
+que tengan más de `BACKUP_RETENCION_DIAS` días (30 por defecto).
+
+- **Revisar que funciona:** en Portainer, abre los logs de `rumbo-backup-1`.
+  Cada respaldo deja una línea `Respaldo creado: ...` o
+  `ERROR: no se pudo crear el respaldo`.
+- **Respaldo inmediato:** reinicia `rumbo-backup-1`. Hazlo antes de desplegar
+  cambios que toquen la base de datos.
+- **Copia fuera del NAS:** configura Hyper Backup para copiar la carpeta
+  compartida `backups` a un disco USB, otro NAS o la nube. Si el NAS falla, los
+  respaldos guardados solo en él se pierden con los datos.
+
+Los respaldos contienen los datos personales de cada cuenta. No los subas al
+repositorio ni los compartas.
+
+### Restaurar un respaldo
+
+Restaurar **reemplaza** todos los datos actuales por los del archivo.
+
+1. En Portainer, detén el contenedor `rumbo-web-1` para que nadie escriba
+   mientras tanto.
+2. Abre la **Console** de `rumbo-backup-1` con `/bin/sh` y pulsa **Connect**.
+3. Lista los respaldos y elige uno:
+
+   ```sh
+   ls -l /respaldos
+   ```
+
+4. Restáuralo, cambiando el nombre del archivo:
+
+   ```sh
+   pg_restore --clean --if-exists --no-owner -d "$PGDATABASE" /respaldos/rumbo-2026-11-14_0300.dump
+   ```
+
+5. Vuelve a iniciar `rumbo-web-1` y revisa la app.
+
+Prueba una restauración al menos una vez: un respaldo que nunca se restauró no
+está garantizado.
 
 ## Desarrollo local
 

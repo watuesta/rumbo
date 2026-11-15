@@ -35,6 +35,9 @@ alimentación y pasos, con gráficas. Se comparte con otra persona (mi hermana).
   `static/js/graficas.js` con Chart.js guardado en `static/vendor/`.
 - Docker: `entrypoint.sh` corre `migrate` y `collectstatic` antes de Gunicorn.
   `docker-compose.yml` usa `${VAR}` para que Portainer cargue las variables.
+- El servicio `backup` del compose usa la imagen `postgres:17` con el script de
+  respaldo escrito en `command` (Portainer CE no monta archivos del repo; en el
+  compose los `$` del script se escriben `$$`). Guarda en `BACKUP_DIR`.
 
 ## Stack
 - Backend: Django + Python
