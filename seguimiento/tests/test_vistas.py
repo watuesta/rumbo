@@ -342,4 +342,4 @@ class CaloriasActivasTests(TestCase):
     def test_historial_muestra_las_activas(self):
         RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, pasos=8000, calorias_activas=350)
         fila = self.client.get(reverse("historial")).context["pagina"][0]
-        self.assertEqual(fila["datos"], [(8000, "pasos"), (350, "activas")])
+        self.assertEqual(fila["datos"], [(8000, "pasos"), (350, "kcal activas")])

@@ -208,7 +208,7 @@ def historial(request):
         datos = [
             (registro.pasos if registro else None, "pasos"),
             (calorias.get(f, {}).get("total"), "kcal"),
-            (registro.calorias_activas if registro else None, "activas"),
+            (registro.calorias_activas if registro else None, "kcal activas"),
         ]
         filas.append({
             "fecha": f,
