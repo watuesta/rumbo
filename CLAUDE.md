@@ -51,6 +51,9 @@ alimentación y pasos, con gráficas. Se comparte con otra persona (mi hermana).
 - Haz commits pequeños, uno por cambio lógico, con mensajes en español.
 - Solo haz commit, push o PR cuando yo lo pida explícitamente.
 - Antes de abrir un PR, corre los tests y revisa los cambios con code-review.
+- Si el cambio afecta lo que hace la app, cómo se instala o cómo se despliega,
+  actualiza el `README.md` en la misma rama antes de crear el PR, sin esperar a
+  que te lo pida.
 - Para funciones nuevas, usa feature-dev. Para interfaces y gráficas, usa
   frontend-design.
 - Si el cambio es grande o ambiguo, propón primero un plan y espera mi
