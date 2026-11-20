@@ -73,17 +73,23 @@ def inicio(request):
     perfil = request.perfil
     hoy = timezone.localdate()
     ultimo = ultimo_pesaje(request.user)
-    pasos_semana = dict(
-        RegistroDiario.objects.filter(
-            usuario=request.user, fecha__gte=hoy - timedelta(days=hoy.weekday())
-        ).values_list("fecha", "pasos")
+    lunes = calculos.lunes_de(hoy)
+    registros_semana = RegistroDiario.objects.filter(usuario=request.user, fecha__gte=lunes, fecha__lte=hoy)
+    pasos_semana = {r.fecha: r.pasos for r in registros_semana}
+    activas_semana = {r.fecha: r.calorias_activas for r in registros_semana}
+    calorias_semana = dict(
+        Comida.objects.filter(usuario=request.user, fecha__gte=lunes, fecha__lte=hoy)
+        .values("fecha")
+        .annotate(total=Sum("calorias"))
+        .values_list("fecha", "total")
     )
     peso = ultimo.peso if ultimo else perfil.peso_inicial
-    consumidas = Comida.objects.filter(usuario=request.user, fecha=hoy).aggregate(t=Sum("calorias"))["t"] or 0
+    consumidas = calorias_semana.get(hoy, 0)
     calorias = calorias_del_perfil(perfil, peso)
-    registro_hoy = RegistroDiario.objects.filter(usuario=request.user, fecha=hoy).first()
-    activas = registro_hoy.calorias_activas if registro_hoy else None
-    objetivo = calculos.objetivo_del_dia(calorias["objetivo"], activas) if calorias else None
+    objetivo = calculos.objetivo_del_dia(calorias["objetivo"], activas_semana.get(hoy)) if calorias else None
+    semana = (
+        calculos.calorias_semana(calorias["objetivo"], calorias_semana, activas_semana, hoy) if calorias else None
+    )
     return render(
         request,
         "seguimiento/inicio.html",
@@ -99,6 +105,7 @@ def inicio(request):
             "calorias": calorias,
             "objetivo": objetivo,
             "restan": objetivo - consumidas if objetivo is not None else None,
+            "semana": semana,
         },
     )
 

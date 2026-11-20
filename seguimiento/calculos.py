@@ -45,9 +45,14 @@ def promedio_movil(pesajes, fechas, ventana=7):
     return resultado
 
 
+def lunes_de(hoy):
+    """Primer día de la semana de `hoy`: las semanas van de lunes a domingo."""
+    return hoy - timedelta(days=hoy.weekday())
+
+
 def promedio_pasos_semana(pasos_por_fecha, hoy):
     """Promedio de pasos de lunes a hoy, contando solo los días con pasos."""
-    lunes = hoy - timedelta(days=hoy.weekday())
+    lunes = lunes_de(hoy)
     valores = [p for f, p in pasos_por_fecha.items() if lunes <= f <= hoy and p is not None]
     return round(sum(valores) / len(valores)) if valores else None
 
@@ -80,6 +85,35 @@ def calorias_objetivo(sexo, peso, altura_cm, edad):
 def objetivo_del_dia(objetivo, calorias_activas):
     """Las calorías activas del día (ejercicio, movimiento) se suman al objetivo."""
     return objetivo + (calorias_activas or 0)
+
+
+def calorias_semana(objetivo, calorias_por_fecha, activas_por_fecha, hoy):
+    """Calorías de la semana de lunes a domingo frente a su presupuesto.
+
+    El presupuesto suma el objetivo del día (con sus activas) de hoy, de los días
+    que faltan hasta el domingo y de los días pasados con comidas: un día sin
+    anotar no se vuelve margen para el resto de la semana. `por_dia` reparte lo
+    que quedaba al empezar el día entre hoy y el domingo, para que lo comido hoy
+    no achique el promedio.
+    """
+    lunes = lunes_de(hoy)
+    domingo = lunes + timedelta(days=6)
+    pasados = dias_entre(lunes, hoy - timedelta(days=1))
+    con_comidas = [d for d in pasados if calorias_por_fecha.get(d)]
+    restantes = dias_entre(hoy, domingo)
+    presupuesto = sum(objetivo_del_dia(objetivo, activas_por_fecha.get(d)) for d in con_comidas + restantes)
+    consumidas = sum(c for d, c in calorias_por_fecha.items() if lunes <= d <= hoy and c)
+    restan = presupuesto - consumidas
+    return {
+        "lunes": lunes,
+        "domingo": domingo,
+        "consumidas": consumidas,
+        "presupuesto": presupuesto,
+        "restan": restan,
+        "dias_restantes": len(restantes),
+        "por_dia": round((restan + (calorias_por_fecha.get(hoy) or 0)) / len(restantes)),
+        "dias_sin_comidas": len(pasados) - len(con_comidas),
+    }
 
 
 def dias_en_objetivo(calorias, objetivos):
