@@ -396,3 +396,30 @@ class InicioNombreTests(TestCase):
         respuesta = self.client.get(reverse("inicio"))
         self.assertIsNone(respuesta.context["edad"])
         self.assertContains(respuesta, '<h1 class="ruta-quien">ana</h1>', html=True)
+
+
+class CaloriasSemanaVistasTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+        self.hoy = timezone.localdate()
+        self.lunes = self.hoy - timedelta(days=self.hoy.weekday())
+
+    def test_suma_de_lunes_a_hoy_sin_la_semana_anterior(self):
+        objetivo = completar_perfil(self.usuario)
+        Comida.objects.create(usuario=self.usuario, fecha=self.hoy, calorias=700)
+        Comida.objects.create(usuario=self.usuario, fecha=self.lunes, calorias=400)
+        Comida.objects.create(usuario=self.usuario, fecha=self.lunes - timedelta(days=1), calorias=2500)
+        otro = crear_usuario("eva")
+        Comida.objects.create(usuario=otro, fecha=self.hoy, calorias=900)
+        semana = self.client.get(reverse("inicio")).context["semana"]
+        self.assertEqual(semana["consumidas"], 1100)
+        self.assertEqual(semana["dias_restantes"], 7 - self.hoy.weekday())
+        # Entran el lunes (si ya pasó), hoy y lo que falta; los demás días pasados no tienen comidas.
+        dias = semana["dias_restantes"] + (1 if self.hoy > self.lunes else 0)
+        self.assertEqual(semana["presupuesto"], objetivo * dias)
+
+    def test_sin_datos_del_perfil_no_hay_semana(self):
+        respuesta = self.client.get(reverse("inicio"))
+        self.assertIsNone(respuesta.context["semana"])
+        self.assertNotContains(respuesta, "Esta semana")

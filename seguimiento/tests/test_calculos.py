@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.test import SimpleTestCase
@@ -98,6 +98,53 @@ class ObjetivoDelDiaTests(SimpleTestCase):
 
     def test_sin_calorias_activas_queda_el_objetivo(self):
         self.assertEqual(calculos.objetivo_del_dia(1500, None), 1500)
+
+
+class CaloriasSemanaTests(SimpleTestCase):
+    # El 16 de noviembre de 2026 es lunes.
+    LUNES = date(2026, 11, 16)
+
+    def test_el_lunes_cuenta_los_siete_dias(self):
+        semana = calculos.calorias_semana(1500, {self.LUNES: 600}, {}, self.LUNES)
+        self.assertEqual(semana["presupuesto"], 7 * 1500)
+        self.assertEqual(semana["restan"], 7 * 1500 - 600)
+        self.assertEqual(semana["dias_restantes"], 7)
+        # Lo comido hoy no achica el promedio: sigue siendo el objetivo completo.
+        self.assertEqual(semana["por_dia"], 1500)
+        self.assertEqual(semana["domingo"], date(2026, 11, 22))
+
+    def test_dia_pasado_sin_comidas_sale_del_presupuesto(self):
+        miercoles = self.LUNES + timedelta(days=2)
+        calorias = {self.LUNES: 1400, self.LUNES - timedelta(days=1): 3000}
+        semana = calculos.calorias_semana(1500, calorias, {}, miercoles)
+        # Cuentan lunes, hoy y los cuatro que faltan; el martes no. El domingo anterior es de otra semana.
+        self.assertEqual(semana["presupuesto"], 6 * 1500)
+        self.assertEqual(semana["consumidas"], 1400)
+        self.assertEqual(semana["dias_sin_comidas"], 1)
+        self.assertEqual(semana["dias_restantes"], 5)
+
+    def test_las_activas_suman_al_presupuesto(self):
+        domingo = self.LUNES + timedelta(days=6)
+        calorias = {self.LUNES + timedelta(days=i): 1500 for i in range(6)}
+        semana = calculos.calorias_semana(1500, calorias, {self.LUNES: 300, domingo: 200}, domingo)
+        self.assertEqual(semana["presupuesto"], 7 * 1500 + 500)
+        self.assertEqual(semana["restan"], 1500 + 500)
+        self.assertEqual(semana["por_dia"], 2000)
+
+    def test_restan_negativo_si_te_pasas(self):
+        sabado = self.LUNES + timedelta(days=5)
+        calorias = {self.LUNES + timedelta(days=i): 3000 for i in range(6)}
+        semana = calculos.calorias_semana(1500, calorias, {}, sabado)
+        self.assertEqual(semana["restan"], 7 * 1500 - 6 * 3000)
+        # Lo que quedaba al empezar el sábado, repartido entre sábado y domingo.
+        self.assertEqual(semana["por_dia"], (7 * 1500 - 5 * 3000) // 2)
+
+    def test_por_dia_reparte_el_margen_de_los_dias_pasados(self):
+        miercoles = self.LUNES + timedelta(days=2)
+        calorias = {self.LUNES: 1200, self.LUNES + timedelta(days=1): 1300, miercoles: 800}
+        semana = calculos.calorias_semana(1500, calorias, {}, miercoles)
+        # Lunes y martes dejaron 500 kcal de margen para los cinco días que quedan.
+        self.assertEqual(semana["por_dia"], 1600)
 
 
 class DiasEnObjetivoTests(SimpleTestCase):

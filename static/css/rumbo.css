@@ -332,6 +332,46 @@ h2 {
   color: var(--tenue);
 }
 
+/* ---------- Inicio: la semana ---------- */
+
+/* Parte del presupuesto de lunes a domingo ya consumida; --uso puede pasar de
+   100 % y la barra se queda llena en rojo. */
+.medidor {
+  --uso: 0%;
+  position: relative;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--linea);
+  overflow: hidden;
+}
+.medidor::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(var(--uso), 100%);
+  border-radius: inherit;
+  background: var(--acento);
+  animation: avanzar 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.medidor-pasado::after {
+  background: var(--peligro);
+}
+.semana p {
+  margin-bottom: 0;
+}
+.semana > .trayecto-extremos,
+.semana > .semana-nota {
+  margin-top: 0.4rem;
+}
+.semana-dia {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.semana-nota {
+  font-size: 0.875rem;
+  color: var(--tenue);
+}
+
 /* ---------- Botones ---------- */
 
 .boton {
