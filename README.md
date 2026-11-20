@@ -14,21 +14,36 @@ has avanzado hacia tu meta.
 
 - **Inicio.** Tu último peso en grande y una línea que va de tu peso inicial a
   tu meta, con un marcador en el punto donde estás. Debajo, los kilos que has
-  bajado, los que faltan y tu promedio de pasos de la semana (de lunes a hoy)
-  frente a tu meta diaria.
-- **Registrar hoy.** Una sola pantalla por día con peso, pasos, cintura y
-  cadera, todos opcionales: puedes anotar el peso en la mañana y los pasos en la
-  noche. En la misma pantalla agregas comidas con sus calorías y una
-  descripción corta, y ves el total del día. Las calorías las escribes tú; la
-  app no las calcula. Peso y medidas aceptan coma o punto decimal.
+  bajado, los que faltan, tu promedio de pasos de la semana (de lunes a hoy)
+  frente a tu meta diaria y las calorías de hoy con lo que te queda de tu
+  objetivo.
+- **Esta semana.** También en el inicio, las calorías de lunes a domingo frente
+  a un presupuesto semanal, para saber si vas bien y cuánto margen tienes para el
+  fin de semana. Muestra lo consumido, lo que queda hasta el domingo y cuánto
+  puedes comer en promedio por día en los días que faltan. El presupuesto suma
+  el objetivo de hoy, de los días que faltan y de los días pasados en los que
+  anotaste comidas: un día sin anotar no cuenta como margen, y la app lo avisa.
+  También avisa si el promedio por día baja del mínimo seguro. Se reinicia cada
+  lunes.
+- **Registrar hoy.** Una sola pantalla por día con peso, pasos, calorías
+  activas, cintura y cadera, todos opcionales: puedes anotar el peso en la
+  mañana y los pasos en la noche. En la misma pantalla agregas comidas con sus
+  calorías y una descripción corta, y ves el total del día frente a tu objetivo.
+  Las calorías las escribes tú; la app no las calcula. Las calorías activas
+  (ejercicio, movimiento) se suman al objetivo de ese día. Peso y medidas
+  aceptan coma o punto decimal.
 - **Historial.** La lista de días registrados con peso, pasos y calorías. Desde
   ahí abres cualquier día para corregirlo o borrarlo, y editas o borras comidas.
 - **Gráficas.** Peso diario con su promedio móvil de 7 días y la línea de la
-  meta; pasos por día frente a la meta diaria; y calorías totales por día. Puedes
-  ver los últimos 30 días, 90 días o todo el historial.
-- **Perfil.** Peso inicial, fecha de inicio, peso meta y meta diaria de pasos
-  (8.000 por defecto). Se pide la primera vez que entras y lo puedes cambiar
-  cuando quieras.
+  meta; pasos por día frente a la meta diaria; y calorías totales por día frente
+  al objetivo de cada día. Puedes ver los últimos 30 días, 90 días o todo el
+  historial.
+- **Perfil.** Peso inicial, fecha de inicio, peso meta, meta diaria de pasos
+  (8.000 por defecto), sexo, fecha de nacimiento y altura. Se pide la primera vez
+  que entras y lo puedes cambiar cuando quieras. Con tu último peso, sexo, edad
+  y altura, la app calcula tu objetivo diario de calorías: tu mantenimiento
+  (Mifflin-St Jeor, con vida sedentaria) menos 500 kcal, sin bajar de 1.200 kcal
+  en mujeres ni de 1.500 en hombres.
 
 Otros detalles:
 
