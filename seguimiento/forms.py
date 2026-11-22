@@ -119,7 +119,14 @@ class RegistroDiarioForm(forms.ModelForm):
         }
         # Mensajes cortos: caben bajo los campos angostos de las medidas.
         error_messages = {
-            m: {"min_value": "Mínimo %(limit_value)s cm.", "max_value": "Máximo %(limit_value)s cm."} for m in MEDIDAS
+            m: {
+                "min_value": "Mínimo %(limit_value)s cm.",
+                "max_value": "Máximo %(limit_value)s cm.",
+                "max_digits": "Máximo 300 cm.",
+                "max_whole_digits": "Máximo 300 cm.",
+                "max_decimal_places": "Usa un solo decimal.",
+            }
+            for m in MEDIDAS
         }
 
     @property
@@ -130,9 +137,12 @@ class RegistroDiarioForm(forms.ModelForm):
     def medidas_derecha(self):
         return [self[m] for m in MEDIDAS_DERECHA]
 
+    medidas_total = len(MEDIDAS)
+
     @property
     def medidas_anotadas(self):
-        return sum(1 for m in MEDIDAS if self[m].value() not in (None, ""))
+        """Medidas con valor; tras un POST con errores no cuenta las inválidas."""
+        return sum(1 for m in MEDIDAS if self[m].value() not in (None, "") and not self[m].errors)
 
     @property
     def medidas_abiertas(self):

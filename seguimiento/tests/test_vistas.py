@@ -134,6 +134,19 @@ class DiaTests(TestCase):
         self.assertTrue(respuesta.context["form"].errors["brazo"])
         self.assertContains(respuesta, '<details class="medidas" open>')
 
+    def test_pecho_rechaza_un_valor_irreal(self):
+        respuesta = self.client.post(self.url, {"pecho": "10,5"})
+        self.assertFalse(RegistroDiario.objects.exists())
+        self.assertContains(respuesta, "Mínimo 40 cm.")
+
+    def test_demasiados_decimales_da_un_mensaje_corto(self):
+        respuesta = self.client.post(self.url, {"cintura": "80,55"})
+        self.assertContains(respuesta, "Usa un solo decimal.")
+
+    def test_el_contador_no_cuenta_medidas_invalidas(self):
+        respuesta = self.client.post(self.url, {"cintura": "80", "brazo": "5"})
+        self.assertContains(respuesta, "1 de 8 en cm")
+
     def test_sin_medidas_el_desplegable_sale_cerrado(self):
         RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, peso=Decimal("88"))
         respuesta = self.client.get(self.url)

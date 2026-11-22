@@ -33,7 +33,7 @@
   <details class="medidas"{% if form.medidas_abiertas %} open{% endif %}>
     <summary>
       <span class="medidas-titulo">Medidas</span>
-      <span class="medidas-cuenta">{% if form.medidas_anotadas %}{{ form.medidas_anotadas }} de 8 en cm{% else %}En cm, opcionales{% endif %}</span>
+      <span class="medidas-cuenta">{% if form.medidas_anotadas %}{{ form.medidas_anotadas }} de {{ form.medidas_total }} en cm{% else %}En cm, opcionales{% endif %}</span>
       <svg class="medidas-chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </summary>
     <div class="medidas-cuerpo">
