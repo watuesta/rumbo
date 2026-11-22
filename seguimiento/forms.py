@@ -141,9 +141,13 @@ class RegistroDiarioForm(forms.ModelForm):
         return sum(1 for m in MEDIDAS if self[m].value() not in (None, "") and not self[m].errors)
 
     @property
+    def medidas_con_error(self):
+        return [self[m] for m in MEDIDAS if self[m].errors]
+
+    @property
     def medidas_abiertas(self):
         """El desplegable se abre si ya hay medidas o si alguna tiene error."""
-        return bool(self.medidas_anotadas or any(self[m].errors for m in MEDIDAS))
+        return bool(self.medidas_anotadas or self.medidas_con_error)
 
     def clean(self):
         datos = super().clean()

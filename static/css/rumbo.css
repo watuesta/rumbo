@@ -779,6 +779,13 @@ h2 {
   font-size: 1.0625rem;
 }
 
+.medidas-errores {
+  padding: 0 0.875rem 1rem;
+}
+.medidas-errores > * + * {
+  margin-top: 0.25rem;
+}
+
 .silueta {
   display: block;
   height: 16rem;

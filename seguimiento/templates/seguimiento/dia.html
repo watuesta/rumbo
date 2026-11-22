@@ -45,6 +45,12 @@
         {% for campo in form.medidas_derecha %}{% include "medida.html" %}{% endfor %}
       </div>
     </div>
+    {% if form.medidas_con_error %}
+      {# Los errores van aparte para que las filas no crezcan y las líneas guía sigan alineadas. #}
+      <div class="medidas-errores">
+        {% for campo in form.medidas_con_error %}{% for e in campo.errors %}<p class="campo-error">{{ campo.label }}: {{ e }}</p>{% endfor %}{% endfor %}
+      </div>
+    {% endif %}
   </details>
   <button type="submit" class="boton">Guardar día</button>
 </form>

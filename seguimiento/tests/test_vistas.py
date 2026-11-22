@@ -143,6 +143,10 @@ class DiaTests(TestCase):
         respuesta = self.client.post(self.url, {"cintura": "80,55"})
         self.assertContains(respuesta, "Usa un solo decimal.")
 
+    def test_errores_de_medidas_van_debajo_de_la_figura(self):
+        respuesta = self.client.post(self.url, {"brazo": "5"})
+        self.assertContains(respuesta, '<p class="campo-error">Brazo: Mínimo 10 cm.</p>', html=True)
+
     def test_peso_se_muestra_sin_ceros_de_mas(self):
         RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, peso=Decimal("88.0"))
         self.assertContains(self.client.get(self.url), 'value="88"')
