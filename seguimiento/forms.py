@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -17,6 +19,19 @@ class DecimalFlexible(forms.DecimalField):
 
 def decimal_widget(placeholder=""):
     return forms.TextInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": placeholder})
+
+
+class MedidaInput(forms.TextInput):
+    """Muestra 28.0 como 28 y 28.5 como 28,5."""
+
+    def format_value(self, value):
+        if isinstance(value, Decimal):
+            return f"{value.normalize():f}".replace(".", ",")
+        return super().format_value(value)
+
+
+def medida_widget():
+    return MedidaInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": "--"})
 
 
 def entero_widget(placeholder=""):
@@ -100,7 +115,7 @@ class RegistroDiarioForm(forms.ModelForm):
             "peso": decimal_widget(),
             "pasos": entero_widget(),
             "calorias_activas": entero_widget(),
-            **{m: decimal_widget("--") for m in MEDIDAS},
+            **{m: medida_widget() for m in MEDIDAS},
         }
         # Mensajes cortos: caben bajo los campos angostos de las medidas.
         error_messages = {

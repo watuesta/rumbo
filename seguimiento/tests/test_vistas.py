@@ -121,6 +121,8 @@ class DiaTests(TestCase):
         respuesta = self.client.get(self.url)
         self.assertContains(respuesta, '<details class="medidas" open>')
         self.assertContains(respuesta, "8 de 8 en cm")
+        self.assertContains(respuesta, 'value="95,5"')
+        self.assertContains(respuesta, 'value="100"')
 
     def test_una_sola_medida_basta_para_guardar_el_dia(self):
         self.client.post(self.url, {"pantorrilla": "36"})
