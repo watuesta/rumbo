@@ -17,12 +17,8 @@ class DecimalFlexible(forms.DecimalField):
         return super().to_python(value)
 
 
-def decimal_widget(placeholder=""):
-    return forms.TextInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": placeholder})
-
-
-class MedidaInput(forms.TextInput):
-    """Muestra 28.0 como 28 y 28.5 como 28,5."""
+class DecimalInput(forms.TextInput):
+    """Muestra 88.0 como 88 y 88.5 como 88,5, igual que se escribe en el iPhone."""
 
     def format_value(self, value):
         if isinstance(value, Decimal):
@@ -30,8 +26,8 @@ class MedidaInput(forms.TextInput):
         return super().format_value(value)
 
 
-def medida_widget():
-    return MedidaInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": "--"})
+def decimal_widget(placeholder=""):
+    return DecimalInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": placeholder})
 
 
 def entero_widget(placeholder=""):
@@ -115,7 +111,7 @@ class RegistroDiarioForm(forms.ModelForm):
             "peso": decimal_widget(),
             "pasos": entero_widget(),
             "calorias_activas": entero_widget(),
-            **{m: medida_widget() for m in MEDIDAS},
+            **{m: decimal_widget("--") for m in MEDIDAS},
         }
         # Mensajes cortos: caben bajo los campos angostos de las medidas.
         error_messages = {
