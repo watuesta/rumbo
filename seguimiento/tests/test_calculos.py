@@ -153,3 +153,21 @@ class DiasEnObjetivoTests(SimpleTestCase):
         objetivos = [1700, 1700, 2050, 1800]
         # 1500 ≤ 1700 y 1800 ≤ 1800 quedan dentro; el día sin comidas no cuenta.
         self.assertEqual(calculos.dias_en_objetivo(calorias, objetivos), {"dentro": 2, "con_comidas": 3})
+
+
+class CambioEnRangoTests(SimpleTestCase):
+    def test_compara_la_primera_y_la_ultima_medida_aunque_lleguen_desordenadas(self):
+        valores = {date(2026, 11, 15): Decimal("79.5"), date(2026, 11, 1): Decimal("82.5"), date(2026, 11, 8): Decimal("81")}
+        resultado = calculos.cambio_en_rango(valores)
+        self.assertEqual(resultado["desde"], date(2026, 11, 1))
+        self.assertEqual(resultado["hasta"], date(2026, 11, 15))
+        self.assertEqual(resultado["mediciones"], 3)
+        self.assertEqual(resultado["cambio"], Decimal("-3.0"))
+
+    def test_con_una_sola_medida_no_hay_cambio(self):
+        resultado = calculos.cambio_en_rango({date(2026, 11, 1): Decimal("80")})
+        self.assertEqual(resultado["mediciones"], 1)
+        self.assertEqual(resultado["cambio"], 0)
+
+    def test_sin_medidas_devuelve_none(self):
+        self.assertIsNone(calculos.cambio_en_rango({}))
