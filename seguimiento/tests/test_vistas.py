@@ -108,6 +108,36 @@ class DiaTests(TestCase):
         self.assertContains(respuesta, "Escribe al menos un dato")
         self.assertFalse(RegistroDiario.objects.exists())
 
+    def test_guarda_las_medidas_del_cuerpo(self):
+        medidas = {
+            "pecho": "95,5", "cuello": "34", "brazo": "28", "antebrazo": "24,5",
+            "cintura": "80", "cadera": "100", "muslo": "55", "pantorrilla": "36",
+        }
+        self.client.post(self.url, medidas)
+        registro = RegistroDiario.objects.get()
+        self.assertEqual(registro.pecho, Decimal("95.5"))
+        self.assertEqual(registro.antebrazo, Decimal("24.5"))
+        self.assertEqual(registro.pantorrilla, Decimal("36"))
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, '<details class="medidas" open>')
+        self.assertContains(respuesta, "8 de 8 en cm")
+
+    def test_una_sola_medida_basta_para_guardar_el_dia(self):
+        self.client.post(self.url, {"pantorrilla": "36"})
+        self.assertEqual(RegistroDiario.objects.get().pantorrilla, Decimal("36"))
+
+    def test_medida_fuera_de_rango_abre_el_desplegable(self):
+        respuesta = self.client.post(self.url, {"peso": "88", "brazo": "5"})
+        self.assertFalse(RegistroDiario.objects.exists())
+        self.assertTrue(respuesta.context["form"].errors["brazo"])
+        self.assertContains(respuesta, '<details class="medidas" open>')
+
+    def test_sin_medidas_el_desplegable_sale_cerrado(self):
+        RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy, peso=Decimal("88"))
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, '<details class="medidas">')
+        self.assertContains(respuesta, "En cm, opcionales")
+
     def test_suma_calorias_del_dia(self):
         url = reverse("agregar_comida", args=[self.hoy.isoformat()])
         self.client.post(url, {"calorias": "450", "descripcion": "Desayuno"})
