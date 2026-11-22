@@ -10,7 +10,7 @@ class PerfilAdmin(admin.ModelAdmin):
 
 @admin.register(RegistroDiario)
 class RegistroDiarioAdmin(admin.ModelAdmin):
-    list_display = ["usuario", "fecha", "peso", "pasos"]
+    list_display = ["usuario", "fecha", "peso", "pasos", "cintura", "cadera"]
     list_filter = ["usuario"]
     date_hierarchy = "fecha"
 
