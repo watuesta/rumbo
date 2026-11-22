@@ -1,8 +1,10 @@
-// Dibuja las gráficas de peso, pasos y calorías con los datos que deja la vista
-// en <script id="datos-graficas">. Se vuelven a dibujar al cambiar de tema.
+// Dibuja las gráficas de peso, pasos, calorías y medidas con los datos que deja
+// la vista en <script id="datos-graficas">. Se vuelven a dibujar al cambiar de
+// tema y, la de medidas, al elegir otra medida.
 (function () {
   var datos = JSON.parse(document.getElementById("datos-graficas").textContent);
   var graficas = [];
+  var medidaElegida = 0;
 
   var formatoDia = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", timeZone: "UTC" });
   var etiquetas = datos.fechas.map(function (f) {
@@ -78,6 +80,15 @@
     };
   }
 
+  // Con una sola serie la leyenda repite el chip elegido. Pocas marcas en el
+  // eje: con cambios de 1 o 2 cm Chart.js pondría una cada 0,2.
+  function opcionesMedidas() {
+    var op = opciones("cm");
+    op.plugins.legend.display = false;
+    op.scales.y.ticks.maxTicksLimit = 5;
+    return op;
+  }
+
   function definiciones() {
     var acento = color("--acento");
     var linea = color("--acento-texto");
@@ -135,6 +146,27 @@
         },
         options: opciones("kcal"),
       },
+      "grafica-medidas": datos.medidas.length && {
+        type: "line",
+        data: {
+          labels: etiquetas,
+          datasets: [
+            {
+              label: datos.medidas[medidaElegida].nombre,
+              data: datos.medidas[medidaElegida].valores,
+              borderColor: linea,
+              borderWidth: 2.5,
+              pointRadius: 4,
+              pointBackgroundColor: linea,
+              pointBorderWidth: 0,
+              pointStyle: "circle",
+              // Las medidas son espaciadas: la línea une los días medidos.
+              spanGaps: true,
+            },
+          ],
+        },
+        options: opcionesMedidas(),
+      },
     };
   }
 
@@ -146,9 +178,22 @@
     var defs = definiciones();
     Object.keys(defs).forEach(function (id) {
       var lienzo = document.getElementById(id);
-      if (lienzo) graficas.push(new Chart(lienzo, defs[id]));
+      if (lienzo && defs[id]) graficas.push(new Chart(lienzo, defs[id]));
     });
   }
+
+  // Cambia la medida de la gráfica y su resumen sin recargar la página.
+  var botones = document.querySelectorAll("[data-medida]");
+  botones.forEach(function (boton) {
+    boton.addEventListener("click", function () {
+      medidaElegida = Number(boton.dataset.medida);
+      botones.forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b === boton));
+      });
+      document.getElementById("resumen-medida").textContent = datos.medidas[medidaElegida].resumen;
+      dibujar();
+    });
+  });
 
   dibujar();
   document.addEventListener("rumbo:tema", dibujar);

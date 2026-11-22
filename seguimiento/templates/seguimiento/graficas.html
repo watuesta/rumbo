@@ -45,6 +45,21 @@
   {% endif %}
 </section>
 
+<section class="seccion" aria-labelledby="titulo-medidas">
+  <h2 id="titulo-medidas">Medidas</h2>
+  {% if datos.medidas %}
+    <div class="chips" role="group" aria-label="Medida que muestra la gráfica">
+      {% for m in datos.medidas %}
+        <button type="button" class="chip" data-medida="{{ forloop.counter0 }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">{{ m.nombre }}</button>
+      {% endfor %}
+    </div>
+    <div class="grafica"><canvas id="grafica-medidas" aria-label="Medida elegida en centímetros por día"></canvas></div>
+    <p class="ruta-nota" id="resumen-medida" aria-live="polite">{{ datos.medidas.0.resumen }}</p>
+  {% else %}
+    <p class="vacio">Sin medidas en este rango. Anótalas en el día, en el desplegable Medidas.</p>
+  {% endif %}
+</section>
+
 {{ datos|json_script:"datos-graficas" }}
 {% endblock %}
 

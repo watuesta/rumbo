@@ -674,6 +674,31 @@ h2 {
   position: relative;
   height: 15rem;
 }
+
+/* Elige qué medida muestra la gráfica; bajan de línea si no caben. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.chip {
+  appearance: none;
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] {
+  border-color: var(--acento);
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font-weight: 700;
+}
 .vacio {
   margin: 0;
   color: var(--tenue);

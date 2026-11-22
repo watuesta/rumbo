@@ -434,6 +434,57 @@ class GraficaCaloriasTests(TestCase):
         self.assertContains(respuesta, "para ver tu objetivo en la gráfica")
 
 
+class GraficaMedidasTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+        self.hoy = timezone.localdate()
+        self.url = reverse("graficas") + "?rango=30"
+
+    def medir(self, dias_atras, **medidas):
+        RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy - timedelta(days=dias_atras), **medidas)
+
+    def test_solo_trae_las_medidas_con_datos_y_cintura_primero(self):
+        self.medir(10, muslo=Decimal("55"), cintura=Decimal("82.5"))
+        self.medir(2, cintura=Decimal("80"))
+        self.medir(1, peso=Decimal("88"))
+        medidas = self.client.get(self.url).context["datos"]["medidas"]
+        self.assertEqual([m["clave"] for m in medidas], ["cintura", "muslo"])
+        self.assertEqual(medidas[0]["valores"][-3], 80.0)
+        self.assertIsNone(medidas[0]["valores"][-1])
+        self.assertEqual(len(medidas[0]["valores"]), 30)
+
+    def test_el_resumen_compara_la_primera_y_la_ultima_medida_del_rango(self):
+        self.medir(10, cintura=Decimal("82.5"))
+        self.medir(2, cintura=Decimal("80"))
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, "Cintura: −2,5 cm desde el")
+        self.assertContains(respuesta, 'aria-pressed="true">Cintura</button>', html=False)
+
+    def test_con_una_sola_medida_lo_dice(self):
+        self.medir(3, cadera=Decimal("100"))
+        self.assertContains(self.client.get(self.url), "Solo hay una medida de cadera en este rango")
+
+    def test_no_cuenta_medidas_fuera_del_rango(self):
+        # El rango de 30 días trae 6 días antes para el promedio del peso; las medidas no los usan.
+        self.medir(32, cintura=Decimal("90"))
+        self.medir(2, cintura=Decimal("80"))
+        medidas = self.client.get(self.url).context["datos"]["medidas"]
+        self.assertIn("Solo hay una medida", medidas[0]["resumen"])
+
+    def test_sin_medidas_invita_a_anotarlas(self):
+        self.medir(1, peso=Decimal("88"))
+        respuesta = self.client.get(self.url)
+        self.assertEqual(respuesta.context["datos"]["medidas"], [])
+        self.assertContains(respuesta, "Sin medidas en este rango.")
+        self.assertNotContains(respuesta, "grafica-medidas")
+
+    def test_no_muestra_medidas_de_otra_persona(self):
+        otra = crear_usuario("bea")
+        RegistroDiario.objects.create(usuario=otra, fecha=self.hoy, cintura=Decimal("70"))
+        self.assertEqual(self.client.get(self.url).context["datos"]["medidas"], [])
+
+
 class InicioNombreTests(TestCase):
     def setUp(self):
         self.usuario = crear_usuario("ana")
