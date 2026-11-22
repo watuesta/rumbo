@@ -58,13 +58,13 @@ class RegistroDiario(models.Model):
     )
     cintura = medida_field("cintura (cm)")
     cadera = medida_field("cadera (cm)")
-    # Brazo y antebrazo pueden medir menos de 30 cm.
-    pecho = medida_field("pecho (cm)", minimo=10)
-    cuello = medida_field("cuello (cm)", minimo=10)
+    # Cada medida con un mínimo realista, para atajar errores como 10,5 por 105.
+    pecho = medida_field("pecho (cm)", minimo=40)
+    cuello = medida_field("cuello (cm)", minimo=20)
     brazo = medida_field("brazo (cm)", minimo=10)
     antebrazo = medida_field("antebrazo (cm)", minimo=10)
-    muslo = medida_field("muslo (cm)", minimo=10)
-    pantorrilla = medida_field("pantorrilla (cm)", minimo=10)
+    muslo = medida_field("muslo (cm)", minimo=25)
+    pantorrilla = medida_field("pantorrilla (cm)", minimo=15)
 
     class Meta:
         verbose_name = "registro diario"
