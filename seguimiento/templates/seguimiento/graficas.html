@@ -6,7 +6,8 @@
 
 <nav class="segmentos" aria-label="Rango de fechas">
   {% for valor, nombre in rangos %}
-    <a href="?rango={{ valor }}" {% if valor == rango %}aria-current="page"{% endif %}>{{ nombre }}</a>
+    {# Al cambiar de rango se conserva la medida elegida; graficas.js la actualiza al elegir otra. #}
+    <a href="?rango={{ valor }}{% if medida_actual %}&amp;medida={{ medida_actual.clave }}{% endif %}" data-rango {% if valor == rango %}aria-current="page"{% endif %}>{{ nombre }}</a>
   {% endfor %}
 </nav>
 
@@ -42,6 +43,23 @@
     {% endif %}
   {% else %}
     <p class="vacio">Sin comidas en este rango.</p>
+  {% endif %}
+</section>
+
+<section class="seccion" aria-labelledby="titulo-medidas">
+  <h2 id="titulo-medidas">Medidas</h2>
+  {% if datos.medidas %}
+    <div class="chips" role="radiogroup" aria-label="Medida que muestra la gráfica">
+      {% for m in datos.medidas %}
+        <button type="button" role="radio" class="chip" data-medida="{{ forloop.counter0 }}" data-clave="{{ m.clave }}"
+                aria-checked="{% if m.clave == medida_actual.clave %}true{% else %}false{% endif %}"
+                tabindex="{% if m.clave == medida_actual.clave %}0{% else %}-1{% endif %}">{{ m.nombre }}</button>
+      {% endfor %}
+    </div>
+    <div class="grafica"><canvas id="grafica-medidas" aria-label="{{ medida_actual.nombre }} en centímetros por día"></canvas></div>
+    <p class="ruta-nota" id="resumen-medida" aria-live="polite">{{ medida_actual.resumen }}</p>
+  {% else %}
+    <p class="vacio">Sin medidas en este rango. Anótalas en el día, en el desplegable Medidas.</p>
   {% endif %}
 </section>
 

@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from seguimiento import calculos
 from seguimiento.models import Comida, Perfil, RegistroDiario
@@ -432,6 +433,81 @@ class GraficaCaloriasTests(TestCase):
         respuesta = self.client.get(self.url)
         self.assertIsNone(respuesta.context["datos"]["objetivo_calorias"])
         self.assertContains(respuesta, "para ver tu objetivo en la gráfica")
+
+
+class GraficaMedidasTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario("ana")
+        self.client.force_login(self.usuario)
+        self.hoy = timezone.localdate()
+        self.url = reverse("graficas") + "?rango=30"
+
+    def medir(self, dias_atras, **medidas):
+        RegistroDiario.objects.create(usuario=self.usuario, fecha=self.hoy - timedelta(days=dias_atras), **medidas)
+
+    def test_solo_trae_las_medidas_con_datos_y_cintura_primero(self):
+        self.medir(10, muslo=Decimal("55"), cintura=Decimal("82.5"))
+        self.medir(2, cintura=Decimal("80"))
+        self.medir(1, peso=Decimal("88"))
+        medidas = self.client.get(self.url).context["datos"]["medidas"]
+        self.assertEqual([m["clave"] for m in medidas], ["cintura", "muslo"])
+        self.assertEqual(medidas[0]["valores"][-3], 80.0)
+        self.assertIsNone(medidas[0]["valores"][-1])
+        self.assertEqual(len(medidas[0]["valores"]), 30)
+
+    def test_el_resumen_compara_la_primera_y_la_ultima_medida_del_rango(self):
+        self.medir(10, cintura=Decimal("82.5"))
+        self.medir(2, cintura=Decimal("80"))
+        respuesta = self.client.get(self.url)
+        desde = date_format(self.hoy - timedelta(days=10), r"j \d\e F").lower()
+        hasta = date_format(self.hoy - timedelta(days=2), r"j \d\e F").lower()
+        self.assertContains(respuesta, f"Cintura: −2,5 cm entre el {desde} y el {hasta}.")
+
+    def test_la_medida_de_la_url_queda_elegida_y_pasa_a_los_enlaces_de_rango(self):
+        self.medir(10, cintura=Decimal("82.5"), cadera=Decimal("101"))
+        self.medir(2, cadera=Decimal("100"))
+        respuesta = self.client.get(self.url + "&medida=cadera")
+        self.assertEqual(respuesta.context["datos"]["medida_elegida"], 1)
+        self.assertContains(respuesta, "Cadera: −1 cm")
+        self.assertContains(respuesta, 'href="?rango=90&amp;medida=cadera"')
+        self.assertRegex(respuesta.content.decode(), r'data-clave="cadera"\s+aria-checked="true"')
+        self.assertContains(respuesta, 'aria-checked="true"', count=1)
+
+    def test_una_medida_desconocida_en_la_url_elige_la_primera(self):
+        self.medir(2, cadera=Decimal("100"))
+        respuesta = self.client.get(self.url + "&medida=nariz")
+        self.assertEqual(respuesta.context["datos"]["medida_elegida"], 0)
+        self.assertEqual(respuesta.context["medida_actual"]["clave"], "cadera")
+
+    def test_en_todo_el_historial_la_fecha_de_otro_ano_lleva_el_ano(self):
+        self.medir(400, cintura=Decimal("90"))
+        self.medir(0, cintura=Decimal("82"))
+        hace_un_ano = date_format(self.hoy - timedelta(days=400), r"j \d\e F \d\e Y").lower()
+        respuesta = self.client.get(reverse("graficas") + "?rango=todo")
+        self.assertContains(respuesta, f"Cintura: −8 cm entre el {hace_un_ano} y hoy.")
+
+    def test_con_una_sola_medida_lo_dice(self):
+        self.medir(3, cadera=Decimal("100"))
+        self.assertContains(self.client.get(self.url), "Solo hay una medida de cadera en este rango")
+
+    def test_no_cuenta_medidas_fuera_del_rango(self):
+        # El rango de 30 días trae 6 días antes para el promedio del peso; las medidas no los usan.
+        self.medir(32, cintura=Decimal("90"))
+        self.medir(2, cintura=Decimal("80"))
+        medidas = self.client.get(self.url).context["datos"]["medidas"]
+        self.assertIn("Solo hay una medida", medidas[0]["resumen"])
+
+    def test_sin_medidas_invita_a_anotarlas(self):
+        self.medir(1, peso=Decimal("88"))
+        respuesta = self.client.get(self.url)
+        self.assertEqual(respuesta.context["datos"]["medidas"], [])
+        self.assertContains(respuesta, "Sin medidas en este rango.")
+        self.assertNotContains(respuesta, "grafica-medidas")
+
+    def test_no_muestra_medidas_de_otra_persona(self):
+        otra = crear_usuario("bea")
+        RegistroDiario.objects.create(usuario=otra, fecha=self.hoy, cintura=Decimal("70"))
+        self.assertEqual(self.client.get(self.url).context["datos"]["medidas"], [])
 
 
 class InicioNombreTests(TestCase):

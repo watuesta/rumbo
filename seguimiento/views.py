@@ -9,12 +9,14 @@ from django.core.paginator import Paginator
 from django.db.models import Min, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.defaultfilters import floatformat
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.views.decorators.http import require_POST
 
 from . import calculos
-from .forms import ComidaForm, PerfilForm, RegistroDiarioForm, UsuarioForm
+from .forms import MEDIDAS, ComidaForm, PerfilForm, RegistroDiarioForm, UsuarioForm
 from .models import Comida, Perfil, RegistroDiario
 
 
@@ -234,6 +236,57 @@ def historial(request):
     return render(request, "seguimiento/historial.html", {"pagina": pagina})
 
 
+# En la gráfica, cintura y cadera primero: son las que más dicen de la pérdida de grasa.
+ORDEN_MEDIDAS = ["cintura", "cadera", *(m for m in MEDIDAS if m not in ("cintura", "cadera"))]
+
+
+def fecha_corta(fecha, hoy):
+    """"3 de noviembre", con el año solo si no es el actual; "hoy" si es hoy."""
+    if fecha == hoy:
+        return "hoy"
+    formato = r"j \d\e F" if fecha.year == hoy.year else r"j \d\e F \d\e Y"
+    return date_format(fecha, formato).lower()
+
+
+def resumen_medida(nombre, cambio, hoy):
+    """Frase bajo la gráfica de medidas, a partir de calculos.cambio_en_rango."""
+    desde = fecha_corta(cambio["desde"], hoy)
+    if cambio["mediciones"] == 1:
+        dia = "la de hoy" if desde == "hoy" else f"la del {desde}"
+        return f"Solo hay una medida de {nombre.lower()} en este rango: {dia}."
+    hasta = fecha_corta(cambio["hasta"], hoy)
+    periodo = f"entre el {desde} y {hasta}" if hasta == "hoy" else f"entre el {desde} y el {hasta}"
+    if cambio["cambio"] == 0:
+        return f"{nombre}: sin cambio {periodo}."
+    signo = "−" if cambio["cambio"] < 0 else "+"
+    return f"{nombre}: {signo}{floatformat(abs(cambio['cambio']), -1)} cm {periodo}."
+
+
+def series_de_medidas(registros, fechas, hoy):
+    """Valores por día y resumen de cada medida con datos en el rango, en ORDEN_MEDIDAS."""
+    etiquetas = RegistroDiarioForm.base_fields
+    series = []
+    for clave in ORDEN_MEDIDAS:
+        valores = {r.fecha: getattr(r, clave) for r in registros if getattr(r, clave) is not None}
+        if not valores:
+            continue
+        # El mismo nombre que en el formulario del día.
+        nombre = etiquetas[clave].label
+        series.append({
+            "clave": clave,
+            "nombre": nombre,
+            "valores": [float(valores[f]) if f in valores else None for f in fechas],
+            "resumen": resumen_medida(nombre, calculos.cambio_en_rango(valores), hoy),
+        })
+    return series
+
+
+def indice_de_medida(series, clave):
+    """Posición de la medida pedida en la URL; la primera si no está en el rango."""
+    claves = [m["clave"] for m in series]
+    return claves.index(clave) if clave in claves else 0
+
+
 @perfil_requerido
 def graficas(request):
     perfil = request.perfil
@@ -267,7 +320,11 @@ def graficas(request):
         "pasos": [pasos.get(f) for f in fechas],
         "meta_pasos": perfil.meta_pasos,
         "calorias": [calorias.get(f) for f in fechas],
+        # Las medidas no llevan promedio móvil: solo cuentan los días del rango.
+        "medidas": series_de_medidas([r for r in filas if r.fecha >= desde], fechas, hoy),
     }
+    medida = indice_de_medida(datos["medidas"], request.GET.get("medida"))
+    datos["medida_elegida"] = medida
     # El objetivo de cada día usa el peso y la edad de hoy más las activas de ese día.
     objetivo = calorias_del_perfil(perfil, peso_actual(request.user, perfil))
     datos["objetivo_calorias"] = (
@@ -283,6 +340,7 @@ def graficas(request):
         {
             "datos": datos,
             "rango": rango,
+            "medida_actual": datos["medidas"][medida] if datos["medidas"] else None,
             "rangos": [(clave, nombre) for clave, (nombre, _) in calculos.RANGOS.items()],
             "hay_peso": any(v is not None for v in datos["peso"]),
             "hay_pasos": any(v is not None for v in datos["pasos"]),

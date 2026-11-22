@@ -137,3 +137,20 @@ def progreso(peso_inicial, peso_meta, peso_actual):
         "faltan": faltan,
         "fraccion": min(max(fraccion, 0.0), 1.0),
     }
+
+
+def cambio_en_rango(valores):
+    """Cambio entre la primera y la última medida de un rango.
+
+    `valores` es un dict {fecha: medida} solo con los días medidos. Devuelve
+    None si no hay medidas; con una sola, el cambio es 0 y `mediciones` es 1.
+    """
+    if not valores:
+        return None
+    fechas = sorted(valores)
+    return {
+        "desde": fechas[0],
+        "hasta": fechas[-1],
+        "mediciones": len(fechas),
+        "cambio": valores[fechas[-1]] - valores[fechas[0]],
+    }

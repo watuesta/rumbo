@@ -38,9 +38,11 @@ has avanzado hacia tu meta.
 - **Historial.** La lista de días registrados con peso, pasos y calorías. Desde
   ahí abres cualquier día para corregirlo o borrarlo, y editas o borras comidas.
 - **Gráficas.** Peso diario con su promedio móvil de 7 días y la línea de la
-  meta; pasos por día frente a la meta diaria; y calorías totales por día frente
-  al objetivo de cada día. Puedes ver los últimos 30 días, 90 días o todo el
-  historial.
+  meta; pasos por día frente a la meta diaria; calorías totales por día frente
+  al objetivo de cada día; y medidas del cuerpo, una a la vez: eliges cuál ver
+  (cintura, cadera, pecho…) entre las que tienen datos, con una nota del cambio
+  en centímetros entre la primera y la última medida del rango. Puedes ver los
+  últimos 30 días, 90 días o todo el historial.
 - **Perfil.** Peso inicial, fecha de inicio, peso meta, meta diaria de pasos
   (8.000 por defecto), sexo, fecha de nacimiento y altura. Se pide la primera vez
   que entras y lo puedes cambiar cuando quieras. Con tu último peso, sexo, edad
