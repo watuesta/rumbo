@@ -240,30 +240,43 @@ def historial(request):
 ORDEN_MEDIDAS = ["cintura", "cadera", *(m for m in MEDIDAS if m not in ("cintura", "cadera"))]
 
 
-def resumen_medida(nombre, cambio):
+def fecha_corta(fecha, hoy):
+    """"3 de noviembre", con el año solo si no es el actual; "hoy" si es hoy."""
+    if fecha == hoy:
+        return "hoy"
+    formato = r"j \d\e F" if fecha.year == hoy.year else r"j \d\e F \d\e Y"
+    return date_format(fecha, formato).lower()
+
+
+def resumen_medida(nombre, cambio, hoy):
     """Frase bajo la gráfica de medidas, a partir de calculos.cambio_en_rango."""
-    desde = date_format(cambio["desde"], r"j \d\e F").lower()
+    desde = fecha_corta(cambio["desde"], hoy)
     if cambio["mediciones"] == 1:
-        return f"Solo hay una medida de {nombre.lower()} en este rango, del {desde}."
+        dia = "la de hoy" if desde == "hoy" else f"la del {desde}"
+        return f"Solo hay una medida de {nombre.lower()} en este rango: {dia}."
+    hasta = fecha_corta(cambio["hasta"], hoy)
+    periodo = f"entre el {desde} y {hasta}" if hasta == "hoy" else f"entre el {desde} y el {hasta}"
     if cambio["cambio"] == 0:
-        return f"{nombre}: sin cambio desde el {desde}."
+        return f"{nombre}: sin cambio {periodo}."
     signo = "−" if cambio["cambio"] < 0 else "+"
-    return f"{nombre}: {signo}{floatformat(abs(cambio['cambio']), -1)} cm desde el {desde}."
+    return f"{nombre}: {signo}{floatformat(abs(cambio['cambio']), -1)} cm {periodo}."
 
 
-def series_de_medidas(registros, fechas):
+def series_de_medidas(registros, fechas, hoy):
     """Valores por día y resumen de cada medida con datos en el rango, en ORDEN_MEDIDAS."""
+    etiquetas = RegistroDiarioForm.base_fields
     series = []
     for clave in ORDEN_MEDIDAS:
         valores = {r.fecha: getattr(r, clave) for r in registros if getattr(r, clave) is not None}
         if not valores:
             continue
-        nombre = clave.capitalize()
+        # El mismo nombre que en el formulario del día.
+        nombre = etiquetas[clave].label
         series.append({
             "clave": clave,
             "nombre": nombre,
             "valores": [float(valores[f]) if f in valores else None for f in fechas],
-            "resumen": resumen_medida(nombre, calculos.cambio_en_rango(valores)),
+            "resumen": resumen_medida(nombre, calculos.cambio_en_rango(valores), hoy),
         })
     return series
 
@@ -302,7 +315,7 @@ def graficas(request):
         "meta_pasos": perfil.meta_pasos,
         "calorias": [calorias.get(f) for f in fechas],
         # Las medidas no llevan promedio móvil: solo cuentan los días del rango.
-        "medidas": series_de_medidas([r for r in filas if r.fecha >= desde], fechas),
+        "medidas": series_de_medidas([r for r in filas if r.fecha >= desde], fechas, hoy),
     }
     # El objetivo de cada día usa el peso y la edad de hoy más las activas de ese día.
     objetivo = calorias_del_perfil(perfil, peso_actual(request.user, perfil))

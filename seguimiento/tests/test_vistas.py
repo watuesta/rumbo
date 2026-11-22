@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from seguimiento import calculos
 from seguimiento.models import Comida, Perfil, RegistroDiario
@@ -458,8 +459,16 @@ class GraficaMedidasTests(TestCase):
         self.medir(10, cintura=Decimal("82.5"))
         self.medir(2, cintura=Decimal("80"))
         respuesta = self.client.get(self.url)
-        self.assertContains(respuesta, "Cintura: −2,5 cm desde el")
-        self.assertContains(respuesta, 'aria-pressed="true">Cintura</button>', html=False)
+        desde = date_format(self.hoy - timedelta(days=10), r"j \d\e F").lower()
+        hasta = date_format(self.hoy - timedelta(days=2), r"j \d\e F").lower()
+        self.assertContains(respuesta, f"Cintura: −2,5 cm entre el {desde} y el {hasta}.")
+
+    def test_en_todo_el_historial_la_fecha_de_otro_ano_lleva_el_ano(self):
+        self.medir(400, cintura=Decimal("90"))
+        self.medir(0, cintura=Decimal("82"))
+        hace_un_ano = date_format(self.hoy - timedelta(days=400), r"j \d\e F \d\e Y").lower()
+        respuesta = self.client.get(reverse("graficas") + "?rango=todo")
+        self.assertContains(respuesta, f"Cintura: −8 cm entre el {hace_un_ano} y hoy.")
 
     def test_con_una_sola_medida_lo_dice(self):
         self.medir(3, cadera=Decimal("100"))
