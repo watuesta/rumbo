@@ -12,14 +12,14 @@ def peso_field(**kwargs):
     )
 
 
-def medida_field(verbose_name):
+def medida_field(verbose_name, minimo=30):
     return models.DecimalField(
         verbose_name,
         max_digits=4,
         decimal_places=1,
         null=True,
         blank=True,
-        validators=[MinValueValidator(30), MaxValueValidator(300)],
+        validators=[MinValueValidator(minimo), MaxValueValidator(300)],
     )
 
 
@@ -58,6 +58,13 @@ class RegistroDiario(models.Model):
     )
     cintura = medida_field("cintura (cm)")
     cadera = medida_field("cadera (cm)")
+    # Brazo y antebrazo pueden medir menos de 30 cm.
+    pecho = medida_field("pecho (cm)", minimo=10)
+    cuello = medida_field("cuello (cm)", minimo=10)
+    brazo = medida_field("brazo (cm)", minimo=10)
+    antebrazo = medida_field("antebrazo (cm)", minimo=10)
+    muslo = medida_field("muslo (cm)", minimo=10)
+    pantorrilla = medida_field("pantorrilla (cm)", minimo=10)
 
     class Meta:
         verbose_name = "registro diario"
