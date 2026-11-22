@@ -26,8 +26,11 @@ has avanzado hacia tu meta.
   También avisa si el promedio por día baja del mínimo seguro. Se reinicia cada
   lunes.
 - **Registrar hoy.** Una sola pantalla por día con peso, pasos, calorías
-  activas, cintura y cadera, todos opcionales: puedes anotar el peso en la
-  mañana y los pasos en la noche. En la misma pantalla agregas comidas con sus
+  activas y medidas del cuerpo, todos opcionales: puedes anotar el peso en la
+  mañana y los pasos en la noche. Las medidas (pecho, cuello, brazo, antebrazo,
+  cintura, cadera, muslo y pantorrilla, en cm) van en un desplegable con una
+  figura que señala dónde se toma cada una; se abre solo si ese día ya tiene
+  medidas. En la misma pantalla agregas comidas con sus
   calorías y una descripción corta, y ves el total del día frente a tu objetivo.
   Las calorías las escribes tú; la app no las calcula. Las calorías activas
   (ejercicio, movimiento) se suman al objetivo de ese día. Peso y medidas

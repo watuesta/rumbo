@@ -696,3 +696,124 @@ h2 {
     transition: none !important;
   }
 }
+
+/* ---------- Medidas del cuerpo ---------- */
+
+.medidas {
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
+  background: var(--superficie);
+}
+.medidas summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.9rem 0.5rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  border-radius: inherit;
+}
+.medidas summary::-webkit-details-marker {
+  display: none;
+}
+.medidas-titulo {
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+.medidas-cuenta {
+  margin-left: auto;
+  color: var(--tenue);
+  font-size: 0.875rem;
+}
+.medidas-chevron {
+  flex: none;
+  color: var(--tenue);
+  transition: transform 0.2s ease;
+}
+.medidas[open] .medidas-chevron {
+  transform: rotate(180deg);
+}
+
+/* Tres columnas: campos, figura y campos. Las 4 filas de cada lado miden lo
+   mismo que la figura (16rem) para que las líneas guía lleguen a cada campo. */
+.medidas-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.25rem 0.875rem 1rem;
+}
+.medidas-lado {
+  display: grid;
+  grid-template-rows: repeat(4, minmax(4rem, auto));
+  align-content: start;
+}
+.medida {
+  align-self: center;
+  gap: 0.25rem;
+}
+.medida label {
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+.medida-caja {
+  position: relative;
+  display: block;
+}
+.medida-caja::after {
+  content: "cm";
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tenue);
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+.campo .medida-caja input {
+  min-height: 2.5rem;
+  height: 2.5rem;
+  padding: 0.3rem 1.75rem 0.3rem 0.55rem;
+  border-radius: 0.6rem;
+  background: var(--fondo);
+  font-size: 1.0625rem;
+}
+
+.medidas-errores {
+  padding: 0 0.875rem 1rem;
+}
+.medidas-errores > * + * {
+  margin-top: 0.25rem;
+}
+
+.silueta {
+  display: block;
+  height: 16rem;
+  width: auto;
+  aspect-ratio: 130 / 300;
+}
+.silueta-guias path {
+  fill: none;
+  stroke: var(--tenue);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+}
+.silueta-cuerpo {
+  fill: var(--linea);
+}
+.silueta-puntos circle {
+  fill: var(--acento);
+  stroke: var(--superficie);
+  stroke-width: 2;
+}
+
+/* En pantallas muy angostas la figura no cabe: solo los campos en 2 columnas. */
+@media (max-width: 359px) {
+  .medidas-cuerpo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .silueta {
+    display: none;
+  }
+}

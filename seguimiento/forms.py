@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -15,8 +17,17 @@ class DecimalFlexible(forms.DecimalField):
         return super().to_python(value)
 
 
+class DecimalInput(forms.TextInput):
+    """Muestra 88.0 como 88 y 88.5 como 88,5, igual que se escribe en el iPhone."""
+
+    def format_value(self, value):
+        if isinstance(value, Decimal):
+            return f"{value.normalize():f}".replace(".", ",")
+        return super().format_value(value)
+
+
 def decimal_widget(placeholder=""):
-    return forms.TextInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": placeholder})
+    return DecimalInput(attrs={"inputmode": "decimal", "autocomplete": "off", "placeholder": placeholder})
 
 
 def entero_widget(placeholder=""):
@@ -81,22 +92,62 @@ class PerfilForm(forms.ModelForm):
         return datos
 
 
+# Medidas del cuerpo en el orden en que se ven junto a la figura.
+MEDIDAS_IZQUIERDA = ["pecho", "brazo", "antebrazo", "muslo"]
+MEDIDAS_DERECHA = ["cuello", "cintura", "cadera", "pantorrilla"]
+MEDIDAS = MEDIDAS_IZQUIERDA + MEDIDAS_DERECHA
+
+
 class RegistroDiarioForm(forms.ModelForm):
     class Meta:
         model = RegistroDiario
-        fields = ["peso", "pasos", "cintura", "cadera", "calorias_activas"]
-        field_classes = {"peso": DecimalFlexible, "cintura": DecimalFlexible, "cadera": DecimalFlexible}
+        fields = ["peso", "pasos", "calorias_activas", *MEDIDAS]
+        field_classes = {"peso": DecimalFlexible, **{m: DecimalFlexible for m in MEDIDAS}}
         labels = {
-            "peso": "Peso", "pasos": "Pasos", "cintura": "Cintura", "cadera": "Cadera",
-            "calorias_activas": "Calorías activas",
+            "peso": "Peso", "pasos": "Pasos", "calorias_activas": "Calorías activas",
+            **{m: m.capitalize() for m in MEDIDAS},
         }
         widgets = {
             "peso": decimal_widget(),
             "pasos": entero_widget(),
-            "cintura": decimal_widget(),
-            "cadera": decimal_widget(),
             "calorias_activas": entero_widget(),
+            **{m: decimal_widget("--") for m in MEDIDAS},
         }
+        # Mensajes cortos: caben bajo los campos angostos de las medidas.
+        error_messages = {
+            m: {
+                "min_value": "Mínimo %(limit_value)s cm.",
+                "max_value": "Máximo %(limit_value)s cm.",
+                "max_digits": "Máximo 300 cm.",
+                "max_whole_digits": "Máximo 300 cm.",
+                "max_decimal_places": "Usa un solo decimal.",
+            }
+            for m in MEDIDAS
+        }
+
+    @property
+    def medidas_izquierda(self):
+        return [self[m] for m in MEDIDAS_IZQUIERDA]
+
+    @property
+    def medidas_derecha(self):
+        return [self[m] for m in MEDIDAS_DERECHA]
+
+    medidas_total = len(MEDIDAS)
+
+    @property
+    def medidas_anotadas(self):
+        """Medidas con valor; tras un POST con errores no cuenta las inválidas."""
+        return sum(1 for m in MEDIDAS if self[m].value() not in (None, "") and not self[m].errors)
+
+    @property
+    def medidas_con_error(self):
+        return [self[m] for m in MEDIDAS if self[m].errors]
+
+    @property
+    def medidas_abiertas(self):
+        """El desplegable se abre si ya hay medidas o si alguna tiene error."""
+        return bool(self.medidas_anotadas or self.medidas_con_error)
 
     def clean(self):
         datos = super().clean()
