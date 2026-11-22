@@ -281,6 +281,12 @@ def series_de_medidas(registros, fechas, hoy):
     return series
 
 
+def indice_de_medida(series, clave):
+    """Posición de la medida pedida en la URL; la primera si no está en el rango."""
+    claves = [m["clave"] for m in series]
+    return claves.index(clave) if clave in claves else 0
+
+
 @perfil_requerido
 def graficas(request):
     perfil = request.perfil
@@ -317,6 +323,8 @@ def graficas(request):
         # Las medidas no llevan promedio móvil: solo cuentan los días del rango.
         "medidas": series_de_medidas([r for r in filas if r.fecha >= desde], fechas, hoy),
     }
+    medida = indice_de_medida(datos["medidas"], request.GET.get("medida"))
+    datos["medida_elegida"] = medida
     # El objetivo de cada día usa el peso y la edad de hoy más las activas de ese día.
     objetivo = calorias_del_perfil(perfil, peso_actual(request.user, perfil))
     datos["objetivo_calorias"] = (
@@ -332,6 +340,7 @@ def graficas(request):
         {
             "datos": datos,
             "rango": rango,
+            "medida_actual": datos["medidas"][medida] if datos["medidas"] else None,
             "rangos": [(clave, nombre) for clave, (nombre, _) in calculos.RANGOS.items()],
             "hay_peso": any(v is not None for v in datos["peso"]),
             "hay_pasos": any(v is not None for v in datos["pasos"]),

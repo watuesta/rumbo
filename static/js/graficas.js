@@ -3,8 +3,8 @@
 // tema y, la de medidas, al elegir otra medida.
 (function () {
   var datos = JSON.parse(document.getElementById("datos-graficas").textContent);
-  var graficas = [];
-  var medidaElegida = 0;
+  // La vista elige la medida según ?medida= de la URL (la primera si no hay).
+  var medidaElegida = datos.medida_elegida || 0;
 
   var formatoDia = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", timeZone: "UTC" });
   var etiquetas = datos.fechas.map(function (f) {
@@ -170,28 +170,62 @@
     };
   }
 
+  // Crea (o vuelve a crear) una gráfica con su definición actual.
+  function dibujarUna(id, defs) {
+    var lienzo = document.getElementById(id);
+    if (!lienzo || !defs[id]) return;
+    var previa = Chart.getChart(lienzo);
+    if (previa) previa.destroy();
+    new Chart(lienzo, defs[id]);
+  }
+
   function dibujar() {
-    graficas.forEach(function (g) {
-      g.destroy();
-    });
-    graficas = [];
     var defs = definiciones();
     Object.keys(defs).forEach(function (id) {
-      var lienzo = document.getElementById(id);
-      if (lienzo && defs[id]) graficas.push(new Chart(lienzo, defs[id]));
+      dibujarUna(id, defs);
     });
   }
 
-  // Cambia la medida de la gráfica y su resumen sin recargar la página.
-  var botones = document.querySelectorAll("[data-medida]");
-  botones.forEach(function (boton) {
+  // Elegir otra medida cambia solo su gráfica y su resumen, sin recargar. La
+  // medida queda en la URL y en los enlaces de rango para conservarla al cambiar
+  // de rango.
+  var botones = Array.prototype.slice.call(document.querySelectorAll("[data-medida]"));
+
+  function elegirMedida(boton) {
+    medidaElegida = Number(boton.dataset.medida);
+    var medida = datos.medidas[medidaElegida];
+    botones.forEach(function (b) {
+      var esta = b === boton;
+      b.setAttribute("aria-checked", String(esta));
+      b.tabIndex = esta ? 0 : -1;
+    });
+    document.getElementById("resumen-medida").textContent = medida.resumen;
+    document.getElementById("grafica-medidas").setAttribute("aria-label", medida.nombre + " en centímetros por día");
+
+    var url = new URL(window.location.href);
+    url.searchParams.set("medida", medida.clave);
+    history.replaceState(null, "", url);
+    document.querySelectorAll("a[data-rango]").forEach(function (enlace) {
+      var destino = new URL(enlace.href);
+      destino.searchParams.set("medida", medida.clave);
+      enlace.href = destino.pathname + destino.search;
+    });
+
+    dibujarUna("grafica-medidas", definiciones());
+  }
+
+  botones.forEach(function (boton, i) {
     boton.addEventListener("click", function () {
-      medidaElegida = Number(boton.dataset.medida);
-      botones.forEach(function (b) {
-        b.setAttribute("aria-pressed", String(b === boton));
-      });
-      document.getElementById("resumen-medida").textContent = datos.medidas[medidaElegida].resumen;
-      dibujar();
+      elegirMedida(boton);
+    });
+    // Como un grupo de opciones: las flechas pasan a la medida anterior o siguiente.
+    boton.addEventListener("keydown", function (evento) {
+      var paso = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[evento.key];
+      if (!paso) return;
+      evento.preventDefault();
+      var otro = botones[(i + paso + botones.length) % botones.length];
+      otro.focus();
+      elegirMedida(otro);
     });
   });
 

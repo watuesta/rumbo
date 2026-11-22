@@ -463,6 +463,22 @@ class GraficaMedidasTests(TestCase):
         hasta = date_format(self.hoy - timedelta(days=2), r"j \d\e F").lower()
         self.assertContains(respuesta, f"Cintura: −2,5 cm entre el {desde} y el {hasta}.")
 
+    def test_la_medida_de_la_url_queda_elegida_y_pasa_a_los_enlaces_de_rango(self):
+        self.medir(10, cintura=Decimal("82.5"), cadera=Decimal("101"))
+        self.medir(2, cadera=Decimal("100"))
+        respuesta = self.client.get(self.url + "&medida=cadera")
+        self.assertEqual(respuesta.context["datos"]["medida_elegida"], 1)
+        self.assertContains(respuesta, "Cadera: −1 cm")
+        self.assertContains(respuesta, 'href="?rango=90&amp;medida=cadera"')
+        self.assertRegex(respuesta.content.decode(), r'data-clave="cadera"\s+aria-checked="true"')
+        self.assertContains(respuesta, 'aria-checked="true"', count=1)
+
+    def test_una_medida_desconocida_en_la_url_elige_la_primera(self):
+        self.medir(2, cadera=Decimal("100"))
+        respuesta = self.client.get(self.url + "&medida=nariz")
+        self.assertEqual(respuesta.context["datos"]["medida_elegida"], 0)
+        self.assertEqual(respuesta.context["medida_actual"]["clave"], "cadera")
+
     def test_en_todo_el_historial_la_fecha_de_otro_ano_lleva_el_ano(self):
         self.medir(400, cintura=Decimal("90"))
         self.medir(0, cintura=Decimal("82"))

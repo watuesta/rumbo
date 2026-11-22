@@ -693,7 +693,7 @@ h2 {
   font-size: 0.9375rem;
   cursor: pointer;
 }
-.chip[aria-pressed="true"] {
+.chip[aria-checked="true"] {
   border-color: var(--acento);
   background: var(--acento);
   color: var(--sobre-acento);
